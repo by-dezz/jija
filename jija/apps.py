@@ -6,7 +6,7 @@ import aiohttp_session
 from aiohttp import web
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
-import settings
+import config
 from jija import middlewares
 from jija.app import App
 from jija.utils.path import Path
@@ -38,7 +38,7 @@ class Apps(metaclass=AppGetter):
     @classmethod
     def __create_base_app(cls):
         app = web.Application()
-        aiohttp_session.setup(app, EncryptedCookieStorage(getattr(settings, 'SECRET_KEY')))
+        aiohttp_session.setup(app, EncryptedCookieStorage(getattr(config, 'SECRET_KEY')))
 
         app.middlewares.extend([
             middlewares.print_request.PrintRequest(),
