@@ -18,14 +18,15 @@ class App:
         self.__name = name
         self.__is_core = aiohttp_app is not None
 
-        self.__routes = self._get_routes(path)
-        self.__database = self._get_database(path)
-        self.__middlewares = self._get_middlewares(path)
-        self.__commands = self._get_commands(path)
+        self.__routes = None
+        self.__database = None
+        self.__middlewares = None
+        self.__commands = None
 
-        self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
+        self.__aiohttp_app = None
 
         self.__childes = []
+        self.__load(aiohttp_app)
 
     @property
     def parent(self):
@@ -72,17 +73,27 @@ class App:
 
         return database_modules
 
+    def __load(self, aiohttp_app=None):
+        self.__routes = self.__get_routes(self.__path)
+        self.__database = self.__get_database(self.__path)
+        self.__middlewares = self.__get_middlewares(self.__path)
+        self.__commands = self.__get_commands(self.__path)
+
+        self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
+
     @staticmethod
-    def _get_routes(path):
+    def __get_routes(path):
         try:
             routes_module = importlib.import_module((path + 'routes').python)
+            if not hasattr(routes_module, 'routes'):
+                return []
             return getattr(routes_module, 'routes')
 
         except ImportError or AttributeError:
             return []
 
     @staticmethod
-    def _get_database(path):
+    def __get_database(path):
         try:
             return importlib.import_module((path + 'database').python)
 
@@ -90,17 +101,17 @@ class App:
             return None
 
     @staticmethod
-    def _get_middlewares(path):
+    def __get_middlewares(path):
         try:
             raw_middlewares = importlib.import_module((path + 'middlewares').python)
             middlewares = collect_subclasses(raw_middlewares, Middleware)
-            return map(lambda item: item(), middlewares)
+            return list(map(lambda item: item(), middlewares))
 
         except ImportError or AttributeError:
             return []
 
     @staticmethod
-    def _get_commands(path):
+    def __get_commands(path):
         commands = {}
         commands_path = path + 'commands'
         if os.path.exists(commands_path.system):
@@ -121,7 +132,7 @@ class App:
                os.path.exists((path + 'app.py').system) and \
                not path.has_protected_nodes()
 
-    def get_aiohttp_app(self, aiohttp_app):
+    def get_aiohttp_app(self, aiohttp_app=None):
         aiohttp_app = aiohttp_app or web.Application()
 
         aiohttp_app.middlewares.extend(self.__middlewares)
