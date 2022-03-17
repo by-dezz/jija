@@ -6,6 +6,7 @@ import subprocess
 from watchdog.events import RegexMatchingEventHandler
 from watchdog.observers import Observer
 
+from jija import config
 from jija.command import Command
 
 
@@ -43,7 +44,7 @@ class Run(Command):
 
     async def handle(self):
         while True:
-            runner = subprocess.Popen(['venv/scripts/python', 'main.py', 'runprocess'])
+            runner = subprocess.Popen([config.StructureConfig.PYTHON_PATH, 'main.py', 'runprocess'])
             await self.close_event.wait()
             runner.kill()
             self.close_event.clear()

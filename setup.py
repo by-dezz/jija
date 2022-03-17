@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.2',
+    version='0.0.4',
     description='',
     packages=[
         'jija',
@@ -10,7 +10,8 @@ setup(
         'jija.forms',
         'jija.commands',
         'jija.utils',
-        'jija.middlewares'
+        'jija.middlewares',
+        'jija.config'
     ],
     author='Kain',
     author_email='kainedezz.2000@gmail.com',

@@ -1,15 +1,20 @@
+from jija.config.base import Base
 from jija.utils.path import Path
 
 
-class StructureConfig:
-    project_path = None
-    core_path = 'core'
-    apps_path = 'apps'
+class StructureConfig(Base):
+    PROJECT_PATH = None
+    CORE_PATH = None
+    APPS_PATH = None
+    PYTHON_PATH = None
 
-    def __init__(self, *, project_dir=None, core_dir='core', apps_dir='apps'):
-        StructureConfig.project_path = self.__get_project_path(project_dir)
-        StructureConfig.core_path = StructureConfig.project_path + core_dir
-        StructureConfig.apps_path = StructureConfig.project_path + apps_dir
+    def __init__(self, *, project_dir=None, core_dir='core', apps_dir='apps', python_path='python'):
+        StructureConfig.PROJECT_PATH = self.__get_project_path(project_dir)
+        StructureConfig.CORE_PATH = StructureConfig.PROJECT_PATH + core_dir
+        StructureConfig.APPS_PATH = StructureConfig.PROJECT_PATH + apps_dir
+        StructureConfig.PYTHON_PATH = python_path
+
+        super().__init__()
 
     @staticmethod
     def __get_project_path(project_dir):

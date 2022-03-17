@@ -1,7 +1,19 @@
-class BaseConfig:
-    SECRET_KEY = None
-    PORT = None
+import inspect
 
-    def __init__(self, secret_key, port=8080):
-        BaseConfig.SECRET_KEY = secret_key
-        BaseConfig.PORT = port
+
+class Base:
+    INITED = False
+
+    def __init__(self):
+        if self.__class__.INITED:
+            raise Exception(f'{self.__class__.__name__} already inited')
+
+        self.__class__.INITED = True
+
+    @classmethod
+    def clean(cls):
+        for key in cls.__dict__:
+            if not key.startswith(f'__') and not isinstance(cls.__dict__[key], (staticmethod, classmethod)):
+                setattr(cls, key, None)
+
+        cls.INITED = False

@@ -9,6 +9,8 @@ class Path:
     def split(path):
         if isinstance(path, list):
             path = path.copy()
+            if path[0] == '':
+                path.pop(0)
 
         elif path.count('/'):
             path = path.split('/')

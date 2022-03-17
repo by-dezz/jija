@@ -8,4 +8,4 @@ from jija.config import NetworkConfig
 class RunProcess(Command):
     def handle(self):
         from jija.apps import Apps
-        web.run_app(Apps.core.aiohttp_app, loop=self.loop, host=NetworkConfig.host, port=NetworkConfig.port)
+        web.run_app(Apps.core.aiohttp_app, loop=self.loop, host=NetworkConfig.HOST, port=NetworkConfig.PORT)

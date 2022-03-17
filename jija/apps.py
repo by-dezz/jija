@@ -6,12 +6,12 @@ import aiohttp_session
 from aiohttp import web
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
-from .config import BaseConfig
 from jija import middlewares
 from jija.app import App
 from jija import commands
 from jija.utils.collector import collect_subclasses
-from .config.structute import StructureConfig
+from jija import config
+from jija.config.base import Base
 
 
 class AppGetter(type):
@@ -31,26 +31,33 @@ class Apps(metaclass=AppGetter):
 
     @classmethod
     def load(cls):
+        cls.__init_configs()
         Apps.apps['core'] = cls.__create_base_app()
-        cls.__collect(StructureConfig.apps_path, Apps.apps['core'])
+        cls.__collect(config.StructureConfig.APPS_PATH, Apps.apps['core'])
         cls.__register_apps()
+
+    @staticmethod
+    def __init_configs():
+        for config_class in collect_subclasses(config, config.base.Base):
+            if not config_class.INITED:
+                config_class()
 
     @classmethod
     def __create_base_app(cls):
         aiohttp_app = web.Application()
-        aiohttp_session.setup(aiohttp_app, EncryptedCookieStorage(BaseConfig.SECRET_KEY))
+        aiohttp_session.setup(aiohttp_app, EncryptedCookieStorage(config.ProjectConfig.SECRET_KEY))
 
         aiohttp_app.middlewares.extend([
             middlewares.print_request.PrintRequest(),
             middlewares.url_corrector.slash_redirect,
         ])
 
-        if cls.app_exists(StructureConfig.core_path):
-            app_class = cls.get_modify_class(StructureConfig.core_path)
+        if cls.app_exists(config.StructureConfig.CORE_PATH):
+            app_class = cls.get_modify_class(config.StructureConfig.CORE_PATH)
         else:
             app_class = App
 
-        app = app_class(path=StructureConfig.core_path, aiohttp_app=aiohttp_app, name='core')
+        app = app_class(path=config.StructureConfig.CORE_PATH, aiohttp_app=aiohttp_app, name='core')
 
         return app
 

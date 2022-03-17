@@ -1,7 +1,12 @@
-class NetworkConfig:
-    host = '0.0.0.0'
-    port = 8080
+from jija.config.base import Base
+
+
+class NetworkConfig(Base):
+    HOST = None
+    PORT = None
 
     def __init__(self, *, host='0.0.0.0', port=8080):
-        NetworkConfig.host = host
-        NetworkConfig.port = port
+        NetworkConfig.HOST = host
+        NetworkConfig.PORT = port
+
+        super().__init__()

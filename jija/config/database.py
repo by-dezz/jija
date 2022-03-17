@@ -1,29 +1,33 @@
-class DatabaseConfig:
-    database = None
-    password = None
-    user = None
-    port = None
-    host = None
+from jija.config.base import Base
 
-    apps = {}
 
-    connection_link = None
+class DatabaseConfig(Base):
+    DATABASE = None
+    PASSWORD = None
+    USER = None
+    PORT = None
+    HOST = None
+
+    APPS = None
+    CONNECTION_LINK = None
 
     def __init__(self, *, database, password, host='localhost', user='postgres', port=5432):
-        DatabaseConfig.database = database
-        DatabaseConfig.password = password
-        DatabaseConfig.user = user
-        DatabaseConfig.port = port
-        DatabaseConfig.host = host
+        DatabaseConfig.DATABASE = database
+        DatabaseConfig.PASSWORD = password
+        DatabaseConfig.USER = user
+        DatabaseConfig.PORT = port
+        DatabaseConfig.HOST = host
 
         DatabaseConfig.connection_link = f'postgres://{user}:{password}@{host}:{port}/{database}'
+        super().__init__()
 
     @classmethod
     def load(cls):
         from jija.apps import Apps
+        cls.APPS = {}
         for app in Apps.apps.values():
             if app.database:
-                cls.apps[app.name] = {
+                cls.APPS[app.name] = {
                     "models": app.database_config,
                     "default_connection": "default",
                 }
@@ -32,10 +36,10 @@ class DatabaseConfig:
     def get_config(cls):
         return {
             "connections": {
-                "default": cls.connection_link
+                "default": cls.CONNECTION_LINK
             },
 
-            "apps": cls.apps,
+            "apps": cls.APPS,
 
             'use_tz': False,
             'timezone': 'Asia/Yekaterinburg'
