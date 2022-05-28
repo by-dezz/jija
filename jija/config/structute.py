@@ -8,13 +8,13 @@ class StructureConfig(Base):
     APPS_PATH = None
     PYTHON_PATH = None
 
-    def __init__(self, *, project_dir=None, core_dir='core', apps_dir='apps', python_path='python'):
+    def __init__(self, *, project_dir=None, core_dir='core', apps_dir='apps', python_path='python', **kwargs):
         StructureConfig.PROJECT_PATH = self.__get_project_path(project_dir)
         StructureConfig.CORE_PATH = StructureConfig.PROJECT_PATH + core_dir
         StructureConfig.APPS_PATH = StructureConfig.PROJECT_PATH + apps_dir
         StructureConfig.PYTHON_PATH = python_path
 
-        super().__init__()
+        super().__init__(**kwargs)
 
     @staticmethod
     def __get_project_path(project_dir):
