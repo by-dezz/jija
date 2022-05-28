@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.4',
+    version='0.0.5',
     description='',
     packages=[
         'jija',
@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'aiohttp==3.8.1',
         'aerich',
-        'tortoise-orm==0.17.8',
+        'tortoise-orm==0.19.1',
         'asyncpg==0.25.0',
         'cryptography',
         'watchdog',

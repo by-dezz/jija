@@ -11,15 +11,15 @@ class DatabaseConfig(Base):
     APPS = None
     CONNECTION_LINK = None
 
-    def __init__(self, *, database, password, host='localhost', user='postgres', port=5432):
+    def __init__(self, *, database, password, host='localhost', user='postgres', port=5432, **kwargs):
         DatabaseConfig.DATABASE = database
         DatabaseConfig.PASSWORD = password
         DatabaseConfig.USER = user
         DatabaseConfig.PORT = port
         DatabaseConfig.HOST = host
 
-        DatabaseConfig.connection_link = f'postgres://{user}:{password}@{host}:{port}/{database}'
-        super().__init__()
+        DatabaseConfig.CONNECTION_LINK = f'postgres://{user}:{password}@{host}:{port}/{database}'
+        super().__init__(**kwargs)
 
     @classmethod
     def load(cls):
