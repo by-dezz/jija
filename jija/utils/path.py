@@ -3,10 +3,19 @@ import os.path
 
 class Path:
     def __init__(self, path):
+        """
+        :type path: str or list
+        """
+
         self.__path, self.__py_ending = self.split(path)
 
     @staticmethod
     def split(path):
+        """
+        :type path: list or str
+        :rtype: (list, bool)
+        """
+
         if isinstance(path, list):
             path = path.copy()
             if path[0] == '':
@@ -37,18 +46,35 @@ class Path:
 
     @property
     def python(self):
+        """
+        :rtype: str
+        """
+
         return '.'.join(self.__path)
 
     @property
     def system(self):
+        """
+        :rtype: str
+        """
+
         return os.path.join(*self.__path) + ('.py' if self.__py_ending else '')
 
     def has_protected_nodes(self):
+        """
+        :rtype: bool
+        """
+
         for node in self.__path:
             if node.startswith('__'):
                 return True
 
     def __add__(self, other):
+        """
+        :type other: Path or str
+        :rtype: Path
+        """
+
         if isinstance(other, str) and not self.__py_ending:
             return Path(self.__path + [other])
 

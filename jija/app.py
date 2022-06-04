@@ -10,6 +10,13 @@ from jija.command import Command
 
 class App:
     def __init__(self, *, name, path, aiohttp_app=None, parent=None):
+        """
+        :type name: str
+        :type path: jija.utils.path.Path
+        :type aiohttp_app: web.Application
+        :type parent: App
+        """
+
         self.__parent = parent
         if parent:
             parent.add_child(self)
@@ -30,42 +37,55 @@ class App:
 
     @property
     def parent(self):
+        """:rtype: App"""
         return self.__parent
 
     @property
     def name(self):
+        """:rtype: str"""
         return self.__name
 
     @property
     def routes(self):
+        """:rtype: list"""
         return self.__routes
 
     @property
     def database(self):
+        """:rtype: file"""
         return self.__database
 
     @property
     def middlewares(self):
+        """:rtype: list[Middleware]"""
         return self.__middlewares
 
     @property
     def aiohttp_app(self):
+        """:rtype: web.Application"""
         return self.__aiohttp_app
 
     @property
     def childes(self):
+        """:rtype: list[App]"""
         return self.__childes
 
     @property
     def path(self):
+        """:rtype: jija.utils.path.Path"""
         return self.__path
 
     @property
     def commands(self):
+        """:rtype: list[str]"""
         return self.__commands
 
     @property
     def database_config(self):
+        """
+        :rtype: list[file]
+        """
+
         database_modules = ['aerich.models'] if self.__is_core else []
 
         if self.__database:
@@ -74,6 +94,10 @@ class App:
         return database_modules
 
     def __load(self, aiohttp_app=None):
+        """
+        :type aiohttp_app: web.Application
+        """
+
         self.__routes = self.__get_routes(self.__path)
         self.__database = self.__get_database(self.__path)
         self.__middlewares = self.__get_middlewares(self.__path)
@@ -94,6 +118,11 @@ class App:
 
     @staticmethod
     def __get_database(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: file
+        """
+
         try:
             return importlib.import_module((path + 'database').python)
 
@@ -102,6 +131,11 @@ class App:
 
     @staticmethod
     def __get_middlewares(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: list[Middleware]
+        """
+
         try:
             raw_middlewares = importlib.import_module((path + 'middlewares').python)
             middlewares = collect_subclasses(raw_middlewares, Middleware)
@@ -112,6 +146,11 @@ class App:
 
     @staticmethod
     def __get_commands(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: list[str]
+        """
+
         commands = {}
         commands_path = path + 'commands'
         if os.path.exists(commands_path.system):
@@ -128,11 +167,21 @@ class App:
 
     @staticmethod
     def is_app(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: bool
+        """
+
         return os.path.isdir(path.system) and \
                os.path.exists((path + 'app.py').system) and \
                not path.has_protected_nodes()
 
     def get_aiohttp_app(self, aiohttp_app=None):
+        """
+        :type aiohttp_app: web.Application
+        :rtype: web.Application
+        """
+
         aiohttp_app = aiohttp_app or web.Application()
 
         aiohttp_app.middlewares.extend(self.__middlewares)
@@ -141,4 +190,8 @@ class App:
         return aiohttp_app
 
     def add_child(self, child):
+        """
+        :type child: App
+        """
+
         self.__childes.append(child)
