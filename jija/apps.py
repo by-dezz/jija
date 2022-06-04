@@ -49,7 +49,6 @@ class Apps(metaclass=AppGetter):
 
         aiohttp_app.middlewares.extend([
             middlewares.print_request.PrintRequest(),
-            middlewares.url_corrector.slash_redirect,
         ])
 
         if cls.app_exists(config.StructureConfig.CORE_PATH):

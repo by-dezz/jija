@@ -38,14 +38,14 @@ class AppsTests(unittest.TestCase):
         app = Apps._Apps__create_base_app()
         self.assertEqual(type(app), CustomApp)
         self.assertEqual(len(list(app.aiohttp_app.router.routes())), 2)
-        self.assertEqual(len(list(app.aiohttp_app.middlewares)), 5)
+        self.assertEqual(len(list(app.aiohttp_app.middlewares)), 4)
         config.StructureConfig.clean()
 
         config.StructureConfig(project_dir=Path(['tests', 'test_data', 'apps', 'without_core']))
         app = Apps._Apps__create_base_app()
         self.assertEqual(type(app), App)
         self.assertEqual(len(list(app.aiohttp_app.router.routes())), 0)
-        self.assertEqual(len(list(app.aiohttp_app.middlewares)), 3)
+        self.assertEqual(len(list(app.aiohttp_app.middlewares)), 2)
 
     def test_app_exists(self):
         normal_path = Path(['tests', 'test_data', 'app', 'normal'])
