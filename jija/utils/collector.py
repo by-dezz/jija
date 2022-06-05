@@ -2,6 +2,12 @@ import inspect
 
 
 def collect_subclasses(module, instance):
+    """
+    :type module: file
+    :type instance: type
+    :rtype: map
+    """
+
     members = []
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, instance) and obj != instance:
