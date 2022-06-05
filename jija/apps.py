@@ -16,6 +16,11 @@ from jija.config.base import Base
 
 class AppGetter(type):
     def __getattr__(self, item):
+        """
+        :type item: str
+        :rtype: App
+        """
+
         app = Apps.apps.get(item)
         if app:
             return app
@@ -44,12 +49,15 @@ class Apps(metaclass=AppGetter):
 
     @classmethod
     def __create_base_app(cls):
+        """
+        :rtype: web.Application
+        """
+
         aiohttp_app = web.Application()
         aiohttp_session.setup(aiohttp_app, EncryptedCookieStorage(config.ProjectConfig.SECRET_KEY))
 
         aiohttp_app.middlewares.extend([
             middlewares.print_request.PrintRequest(),
-            middlewares.url_corrector.slash_redirect,
         ])
 
         if cls.app_exists(config.StructureConfig.CORE_PATH):
@@ -63,10 +71,20 @@ class Apps(metaclass=AppGetter):
 
     @staticmethod
     def app_exists(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: bool
+        """
+
         return os.path.exists((path + 'app.py').system)
 
     @classmethod
     def __collect(cls, path, parent):
+        """
+        :type path: jija.utils.path.Path
+        :type parent: App
+        """
+
         if not os.path.exists(path.system):
             return
 
@@ -81,12 +99,21 @@ class Apps(metaclass=AppGetter):
 
     @staticmethod
     def get_modify_class(path):
+        """
+        :type path: jija.utils.path.Path
+        :rtype: type
+        """
+
         module = importlib.import_module((path + 'app').python)
         modify_class = list(collect_subclasses(module, App))
         return modify_class[0] if modify_class else App
 
     @classmethod
     def __register_apps(cls, app=None):
+        """
+        :type app: App
+        """
+
         if not app:
             app = cls.apps['core']
 
@@ -98,6 +125,12 @@ class Apps(metaclass=AppGetter):
 
     @classmethod
     def get_command(cls, module, command):
+        """
+        :type module: str
+        :type command: str
+        :rtype: type
+        """
+
         if module is None:
             module = 'system'
 

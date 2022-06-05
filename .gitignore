@@ -2,3 +2,5 @@
 venv
 dist
 jija.egg-info
+*__pycache__
+integration_tests/service/migrations

@@ -17,6 +17,7 @@ class AppTest(unittest.TestCase):
         self.empty_path = Path(['tests', 'test_data', 'app', 'empty'])
         self.normal_path = Path(['tests', 'test_data', 'app', 'normal'])
         self.error_path = Path(['tests', 'test_data', 'app', 'error'])
+        self.broken = Path(['tests', 'test_data', 'app', 'broken'])
 
     def test_database_config(self):
         app = App(name='null', path=self.normal_path, aiohttp_app=Application())
@@ -110,3 +111,20 @@ class AppTest(unittest.TestCase):
             aiohttp_app = app.get_aiohttp_app()
             self.assertEqual(data['routes'] * 2, len(list(aiohttp_app.router.routes())))
             self.assertEqual(data['middlewares'], len(aiohttp_app.middlewares))
+
+
+def get_path(section):
+    return Path(['tests', 'test_data', 'broken_app']) + section
+
+
+class AppBrokeTest(unittest.TestCase):
+    COMMANDS = get_path('commands')
+    DATABASE = get_path('database')
+    MIDDLEWARES = get_path('middlewares')
+    ROUTES = get_path('routes')
+
+    def test_broke(self):
+        self.assertRaises(ModuleNotFoundError, lambda: App(name='null', path=self.DATABASE))
+        self.assertRaises(ModuleNotFoundError, lambda: App(name='null', path=self.COMMANDS))
+        self.assertRaises(ModuleNotFoundError, lambda: App(name='null', path=self.MIDDLEWARES))
+        self.assertRaises(ModuleNotFoundError, lambda: App(name='null', path=self.ROUTES))
