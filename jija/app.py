@@ -107,14 +107,20 @@ class App:
 
     @staticmethod
     def __get_routes(path):
-        try:
-            routes_module = importlib.import_module((path + 'routes').python)
+        """
+        :type path: jija.utils.path.Path
+        :rtype: list
+        """
+
+        routes_path = path + 'routes.py'
+
+        if os.path.exists(routes_path.system):
+            routes_module = importlib.import_module(routes_path.python)
             if not hasattr(routes_module, 'routes'):
                 return []
-            return getattr(routes_module, 'routes')
 
-        except ImportError or AttributeError:
-            return []
+            return getattr(routes_module, 'routes')
+        return []
 
     @staticmethod
     def __get_database(path):
@@ -123,11 +129,9 @@ class App:
         :rtype: file
         """
 
-        try:
-            return importlib.import_module((path + 'database').python)
-
-        except ImportError:
-            return None
+        database_path = path + 'database.py'
+        if os.path.exists(database_path.system):
+            return importlib.import_module(database_path.python)
 
     @staticmethod
     def __get_middlewares(path):
@@ -136,13 +140,13 @@ class App:
         :rtype: list[Middleware]
         """
 
-        try:
-            raw_middlewares = importlib.import_module((path + 'middlewares').python)
+        middlewares_path = path + 'middlewares.py'
+        if os.path.exists(middlewares_path.system):
+            raw_middlewares = importlib.import_module(middlewares_path.python)
             middlewares = collect_subclasses(raw_middlewares, Middleware)
             return list(map(lambda item: item(), middlewares))
 
-        except ImportError or AttributeError:
-            return []
+        return []
 
     @staticmethod
     def __get_commands(path):
@@ -172,8 +176,7 @@ class App:
         :rtype: bool
         """
 
-        return os.path.isdir(path.system) and \
-               os.path.exists((path + 'app.py').system) and \
+        return os.path.isdir(path.system) and os.path.exists((path + 'app.py').system) and\
                not path.has_protected_nodes()
 
     def get_aiohttp_app(self, aiohttp_app=None):
