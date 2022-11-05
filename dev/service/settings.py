@@ -11,9 +11,10 @@ config.DatabaseConfig(
 
 
 config.StructureConfig(
+    project_dir='/app'
     # python_path='../../venv/scripts/python.exe'
 )
-
+print(config.StructureConfig.PROJECT_PATH.system)
 
 config.NetworkConfig(
     port=8081

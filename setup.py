@@ -19,11 +19,11 @@ setup(
 
     install_requires=[
         'aiohttp==3.8.1',
+        'aiofile==3.8.1',
         'aerich',
         'tortoise-orm==0.19.1',
         'asyncpg==0.25.0',
         'cryptography',
-        'watchdog',
         'aiohttp_session[secure]',
     ]
 )
