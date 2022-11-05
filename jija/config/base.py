@@ -3,6 +3,7 @@ import inspect
 
 class Base:
     INITED = False
+    REQUIRED = True
 
     def __init__(self, *, reset_init=False):
         if self.__class__.INITED and not reset_init:

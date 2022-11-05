@@ -15,9 +15,6 @@ class Run(Command):
         reloader_instance = reloader.Reloader(config.StructureConfig.PROJECT_PATH, self.close_event)
         await reloader_instance.wait()
 
-    async def prepare(self):
-        pass
-
     async def handle(self):
         asyncio.create_task(self.run_watcher())
         while True:

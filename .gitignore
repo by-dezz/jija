@@ -3,4 +3,4 @@ venv
 dist
 jija.egg-info
 *__pycache__
-dev/service/migrations
+dev/service/core/migrations

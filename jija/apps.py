@@ -1,6 +1,7 @@
 import importlib
 import os
 import sys
+from pathlib import Path
 
 import aiohttp_session
 from aiohttp import web
@@ -44,7 +45,7 @@ class Apps(metaclass=AppGetter):
     @staticmethod
     def __init_configs():
         for config_class in collect_subclasses(config, config.base.Base):
-            if not config_class.INITED:
+            if not config_class.INITED and config_class.REQUIRED:
                 config_class()
 
     @classmethod
@@ -70,41 +71,29 @@ class Apps(metaclass=AppGetter):
         return app
 
     @staticmethod
-    def app_exists(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: bool
-        """
-
-        return os.path.exists((path + 'app.py').system)
+    def app_exists(path: Path) -> bool:
+        return path.joinpath('app.py').exists()
 
     @classmethod
-    def __collect(cls, path, parent):
-        """
-        :type path: jija.utils.path.Path
-        :type parent: App
-        """
-
-        if not os.path.exists(path.system):
+    def __collect(cls, path: Path, parent: App):
+        if not path.exists():
             return
 
-        for sub_app_name in os.listdir(path.system):
+        for sub_app_name in os.listdir(path):
 
-            next_path = path + sub_app_name
+            next_path = path.joinpath(sub_app_name)
             if App.is_app(next_path):
                 app = cls.get_modify_class(next_path)(path=next_path, parent=parent, name=sub_app_name)
                 cls.commands[sub_app_name] = app.commands
                 cls.apps[sub_app_name] = app
-                cls.__collect(path + sub_app_name, app)
+                cls.__collect(path.joinpath(sub_app_name), app)
 
     @staticmethod
-    def get_modify_class(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: type
-        """
+    def get_modify_class(path: Path) -> type:
+        modify_class_path = path.joinpath('app')
+        import_path = ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
-        module = importlib.import_module((path + 'app').python)
+        module = importlib.import_module(import_path)
         modify_class = list(collect_subclasses(module, App))
         return modify_class[0] if modify_class else App
 

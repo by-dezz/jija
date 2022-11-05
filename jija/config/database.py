@@ -1,15 +1,15 @@
+import jija.config
 from jija.config.base import Base
 
 
 class DatabaseConfig(Base):
+    REQUIRED = False
+
     DATABASE = None
     PASSWORD = None
     USER = None
     PORT = None
     HOST = None
-
-    APPS = None
-    CONNECTION_LINK = None
 
     def __init__(self, *, database, password, host='localhost', user='postgres', port=5432, **kwargs):
         DatabaseConfig.DATABASE = database
@@ -18,29 +18,32 @@ class DatabaseConfig(Base):
         DatabaseConfig.PORT = port
         DatabaseConfig.HOST = host
 
-        DatabaseConfig.CONNECTION_LINK = f'postgres://{user}:{password}@{host}:{port}/{database}'
         super().__init__(**kwargs)
 
     @classmethod
-    def load(cls):
-        from jija.apps import Apps
-        cls.APPS = {}
-        for app in Apps.apps.values():
-            if app.database:
-                cls.APPS[app.name] = {
-                    "models": app.database_config,
-                    "default_connection": "default",
-                }
+    async def load(cls):
+        from jija_orm import config
+
+        await config.JijaORM.async_init(
+            project_dir=jija.config.StructureConfig.PROJECT_PATH,
+            connection=config.Connection(
+                host=cls.HOST,
+                port=cls.PORT,
+                user=cls.USER,
+                database=cls.DATABASE,
+                password=cls.PASSWORD
+            ),
+            apps=await cls.__get_apps()
+        )
 
     @classmethod
-    def get_config(cls):
-        return {
-            "connections": {
-                "default": cls.CONNECTION_LINK
-            },
+    async def __get_apps(cls):
+        from jija_orm import config
+        from jija.apps import Apps
 
-            "apps": cls.APPS,
+        apps = []
+        for app in Apps.apps.values():
+            if app.exist('models.py'):
+                apps.append(config.App(name=app.name, migration_dir=app.get_import_path('migrations')))
 
-            'use_tz': False,
-            'timezone': 'Asia/Yekaterinburg'
-        }
+        return apps

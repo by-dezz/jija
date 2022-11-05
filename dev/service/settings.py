@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from jija import config
+# from jija.utils.path import Path
 
 SECRET_KEY = b'Thdrtd  two  length  bytes  key.'
 
@@ -10,13 +13,13 @@ config.DatabaseConfig(
 )
 
 
+
 config.StructureConfig(
-    project_dir='/app'
+    project_path=Path(__file__).parent
     # python_path='../../venv/scripts/python.exe'
 )
-print(config.StructureConfig.PROJECT_PATH.system)
 
-config.NetworkConfig(
-    port=8081
-)
+# config.NetworkConfig(
+#     port=8081
+# )
 

@@ -1,7 +1,9 @@
 import importlib
 import os
+from pathlib import Path
 
 from aiohttp import web
+from jija import config
 
 from jija.middleware import Middleware
 from jija.utils.collector import collect_subclasses
@@ -26,7 +28,6 @@ class App:
         self.__is_core = aiohttp_app is not None
 
         self.__routes = None
-        self.__database = None
         self.__middlewares = None
         self.__commands = None
 
@@ -49,11 +50,6 @@ class App:
     def routes(self):
         """:rtype: list"""
         return self.__routes
-
-    @property
-    def database(self):
-        """:rtype: file"""
-        return self.__database
 
     @property
     def middlewares(self):
@@ -80,92 +76,52 @@ class App:
         """:rtype: list[str]"""
         return self.__commands
 
-    @property
-    def database_config(self):
-        """
-        :rtype: list[file]
-        """
-
-        database_modules = ['aerich.models'] if self.__is_core else []
-
-        if self.__database:
-            database_modules.append((self.__path + 'database').python)
-
-        return database_modules
-
     def __load(self, aiohttp_app=None):
         """
         :type aiohttp_app: web.Application
         """
 
-        self.__routes = self.__get_routes(self.__path)
-        self.__database = self.__get_database(self.__path)
-        self.__middlewares = self.__get_middlewares(self.__path)
-        self.__commands = self.__get_commands(self.__path)
+        self.__routes = self.__get_routes()
+        self.__middlewares = self.__get_middlewares()
+        self.__commands = self.__get_commands()
 
         self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
 
-    @staticmethod
-    def __get_routes(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: list
-        """
+    def __get_routes(self) -> list:
+        if not self.exist('routes'):
+            return []
 
-        routes_path = path + 'routes.py'
+        import_path = self.get_import_path('routes')
+        routes_module = importlib.import_module(import_path)
 
-        if os.path.exists(routes_path.system):
-            routes_module = importlib.import_module(routes_path.python)
-            if not hasattr(routes_module, 'routes'):
-                return []
+        routes = getattr(routes_module, 'routes', None)
+        return routes or []
 
-            return getattr(routes_module, 'routes')
-        return []
+    def __get_middlewares(self) -> list:
+        if not self.exist('middlewares'):
+            return []
 
-    @staticmethod
-    def __get_database(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: file
-        """
+        import_path = self.get_import_path('middlewares')
+        middlewares_module = importlib.import_module(import_path)
+        middlewares = collect_subclasses(middlewares_module, Middleware)
 
-        database_path = path + 'database.py'
-        if os.path.exists(database_path.system):
-            return importlib.import_module(database_path.python)
+        return list(map(lambda middleware: middleware(), middlewares))
 
-    @staticmethod
-    def __get_middlewares(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: list[Middleware]
-        """
-
-        middlewares_path = path + 'middlewares.py'
-        if os.path.exists(middlewares_path.system):
-            raw_middlewares = importlib.import_module(middlewares_path.python)
-            middlewares = collect_subclasses(raw_middlewares, Middleware)
-            return list(map(lambda item: item(), middlewares))
-
-        return []
-
-    @staticmethod
-    def __get_commands(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: list[str]
-        """
+    def __get_commands(self) -> dict:
+        if not self.exist('commands'):
+            return {}
 
         commands = {}
-        commands_path = path + 'commands'
-        if os.path.exists(commands_path.system):
-            for file in os.listdir(commands_path.system):
-                if file.endswith('.py') and not file.startswith('_'):
-                    command_path = commands_path + file.replace('.py', '')
-                    command_module = importlib.import_module(command_path.python)
+        commands_path = self.__path.joinpath('commands')
+        for file in os.listdir(commands_path):
+            if file.endswith('.py') and not file.startswith('_'):
 
-                    command = list(collect_subclasses(command_module, Command))
-                    if command:
-                        commands[file.replace('.py', '')] = command[0]
+                import_path = self.get_import_path(f'{commands}.{file.removesuffix(".py")}')
+                command_module = importlib.import_module(import_path)
+
+                command = list(collect_subclasses(command_module, Command))
+                if command:
+                    commands[file.replace('.py', '')] = command[0]
 
         return commands
 
@@ -198,3 +154,10 @@ class App:
         """
 
         self.__childes.append(child)
+
+    def get_import_path(self, to: str):
+        modify_class_path = self.path.joinpath(to)
+        return ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
+
+    def exist(self, name):
+        return os.path.exists(f'/{self.__path}/{name}') or os.path.exists(f'/{self.__path}/{name}.py')
