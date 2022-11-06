@@ -8,6 +8,7 @@ from jija import config
 from jija.middleware import Middleware
 from jija.utils.collector import collect_subclasses
 from jija.command import Command
+from jija import router
 
 
 class App:
@@ -27,7 +28,7 @@ class App:
         self.__name = name
         self.__is_core = aiohttp_app is not None
 
-        self.__routes = None
+        self.__router = None
         self.__middlewares = None
         self.__commands = None
 
@@ -47,9 +48,8 @@ class App:
         return self.__name
 
     @property
-    def routes(self):
-        """:rtype: list"""
-        return self.__routes
+    def router(self) -> router.Router:
+        return self.__router
 
     @property
     def middlewares(self):
@@ -67,35 +67,32 @@ class App:
         return self.__childes
 
     @property
-    def path(self):
-        """:rtype: jija.utils.path.Path"""
+    def path(self) -> Path:
         return self.__path
 
     @property
-    def commands(self):
-        """:rtype: list[str]"""
+    def commands(self) -> list:
         return self.__commands
 
-    def __load(self, aiohttp_app=None):
-        """
-        :type aiohttp_app: web.Application
-        """
-
-        self.__routes = self.__get_routes()
+    def __load(self, aiohttp_app: web.Application = None):
+        self.__router = self.__get_router()
         self.__middlewares = self.__get_middlewares()
         self.__commands = self.__get_commands()
 
         self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
 
-    def __get_routes(self) -> list:
+    def __get_router(self) -> "router.Router":
         if not self.exist('routes'):
-            return []
+            raw_routes = []
 
-        import_path = self.get_import_path('routes')
-        routes_module = importlib.import_module(import_path)
+        else:
+            import_path = self.get_import_path('routes')
+            routes_module = importlib.import_module(import_path)
 
-        routes = getattr(routes_module, 'routes', None)
-        return routes or []
+            raw_routes = getattr(routes_module, 'routes', [])
+
+        app_router = router.Router(raw_routes)
+        return app_router
 
     def __get_middlewares(self) -> list:
         if not self.exist('middlewares'):
@@ -126,38 +123,30 @@ class App:
         return commands
 
     @staticmethod
-    def is_app(path):
-        """
-        :type path: jija.utils.path.Path
-        :rtype: bool
-        """
+    def is_app(path: Path) -> bool:
+        if not path.is_dir() or not path.joinpath('app.py').exists():
+            return False
 
-        return os.path.isdir(path.system) and os.path.exists((path + 'app.py').system) and\
-               not path.has_protected_nodes()
+        for part in path.parts:
+            if part.startswith('__'):
+                return False
 
-    def get_aiohttp_app(self, aiohttp_app=None):
-        """
-        :type aiohttp_app: web.Application
-        :rtype: web.Application
-        """
+        return True
 
+    def get_aiohttp_app(self, aiohttp_app: web.Application = None) -> web.Application:
         aiohttp_app = aiohttp_app or web.Application()
 
         aiohttp_app.middlewares.extend(self.__middlewares)
-        aiohttp_app.add_routes(self.__routes)
+        aiohttp_app.add_routes(self.__router.routes)
 
         return aiohttp_app
 
-    def add_child(self, child):
-        """
-        :type child: App
-        """
-
+    def add_child(self, child: "App"):
         self.__childes.append(child)
 
-    def get_import_path(self, to: str):
+    def get_import_path(self, to: str) -> str:
         modify_class_path = self.path.joinpath(to)
         return ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
-    def exist(self, name):
+    def exist(self, name: str) -> bool:
         return os.path.exists(f'/{self.__path}/{name}') or os.path.exists(f'/{self.__path}/{name}.py')
