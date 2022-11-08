@@ -113,7 +113,7 @@ class App:
         for file in os.listdir(commands_path):
             if file.endswith('.py') and not file.startswith('_'):
 
-                import_path = self.get_import_path(f'{commands}.{file.removesuffix(".py")}')
+                import_path = self.get_import_path(f'commands.{file.removesuffix(".py")}')
                 command_module = importlib.import_module(import_path)
 
                 command = list(collect_subclasses(command_module, Command))

@@ -1,2 +1,1 @@
-from .collector import *
-from .path import *
+from utils.collector import *
