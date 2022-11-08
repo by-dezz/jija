@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import os
 import sys
@@ -12,7 +13,6 @@ from jija.app import App
 from jija import commands
 from jija.utils.collector import collect_subclasses
 from jija import config
-from jija.config.base import Base
 
 
 class AppGetter(type):
@@ -35,6 +35,16 @@ class Apps(metaclass=AppGetter):
         'system': commands.COMMANDS
     }
 
+    __REQUIRED_CONFIGS = (
+        config.StructureConfig,
+        config.DriversConfig,
+        config.NetworkConfig,
+        config.ProjectConfig
+    )
+
+    __INITED_CONFIGS = []
+    __PREFLIGHT_TASKS = []
+
     @classmethod
     def load(cls):
         cls.__init_configs()
@@ -42,11 +52,23 @@ class Apps(metaclass=AppGetter):
         cls.__collect(config.StructureConfig.APPS_PATH, Apps.apps['core'])
         cls.__register_apps()
 
-    @staticmethod
-    def __init_configs():
-        for config_class in collect_subclasses(config, config.base.Base):
-            if not config_class.INITED and config_class.REQUIRED:
+    @classmethod
+    def config_init_callback(cls, config_class):
+        cls.__INITED_CONFIGS.append(config_class)
+
+    @classmethod
+    def __init_configs(cls):
+        for config_class in cls.__REQUIRED_CONFIGS:
+            if config_class not in cls.__INITED_CONFIGS:
                 config_class()
+
+        asyncio.get_event_loop().run_until_complete(cls.__freeze_configs())
+
+    @classmethod
+    async def __freeze_configs(cls):
+        for config_class in cls.__INITED_CONFIGS:
+            await config_class.freeze()
+            cls.__PREFLIGHT_TASKS.append(config_class.preflight)
 
     @classmethod
     def __create_base_app(cls):
@@ -130,6 +152,7 @@ class Apps(metaclass=AppGetter):
         args = sys.argv
         command = args[1].split('.')
         Apps.load()
+        asyncio.get_event_loop().run_until_complete(cls.__preflight())
 
         if len(command) == 1:
             module = None
@@ -140,3 +163,8 @@ class Apps(metaclass=AppGetter):
         command_class = cls.get_command(module, command)
         command_obj = command_class()
         command_obj.run()
+
+    @classmethod
+    async def __preflight(cls):
+        for task in cls.__PREFLIGHT_TASKS:
+            await task()

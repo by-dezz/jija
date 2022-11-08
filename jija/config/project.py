@@ -1,9 +1,8 @@
-from jija.config.base import Base
+from jija.config import base, fields
 
 
-class ProjectConfig(Base):
-    SECRET_KEY = None
+class ProjectConfig(base.Config):
+    SECRET_KEY = fields.CharField(default=b'*' * 32)
 
-    def __init__(self, *, secret_key=b'*' * 32, **kwargs):
-        ProjectConfig.SECRET_KEY = secret_key
-        super().__init__(**kwargs)
+    def __init__(self, *, secret_key=None):
+        super().__init__(secret_key=secret_key)

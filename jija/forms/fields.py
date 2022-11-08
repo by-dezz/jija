@@ -11,10 +11,11 @@ class Field:
 
     async def validate(self, value):
         if not value:
-            if self.required:
+            if self.required and self.default is None:
+                print(self.default)
                 raise ValidationError('Обязательное поле', value)
             else:
-                return value
+                return value or self.default
 
         for validator in self.validators:
             value = await validator.validate(value, self)
