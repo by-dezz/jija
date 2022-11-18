@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 
-# from tortoise import Tortoise
+import config
 
 
 class Command:
@@ -9,11 +9,7 @@ class Command:
         self.loop = asyncio.get_event_loop()
 
     async def prepare(self):
-        from jija.config import DatabaseConfig
-        if DatabaseConfig.INITED:
-            await DatabaseConfig.load()
-
-        # await Tortoise.init(config=DatabaseConfig.get_config())
+        pass
 
     def run(self):
         asyncio.get_event_loop().run_until_complete(self.prepare())

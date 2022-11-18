@@ -1,12 +1,9 @@
-from jija.config.base import Base
+from jija.config import base, fields
 
 
-class NetworkConfig(Base):
-    HOST = None
-    PORT = None
+class NetworkConfig(base.Config):
+    HOST = fields.CharField(default='0.0.0.0')
+    PORT = fields.IntegerField(default=8080)
 
-    def __init__(self, *, host='0.0.0.0', port=8080, **kwargs):
-        NetworkConfig.HOST = host
-        NetworkConfig.PORT = port
-
-        super().__init__(**kwargs)
+    def __init__(self, *, host=None, port=None):
+        super().__init__(host=host, port=port)

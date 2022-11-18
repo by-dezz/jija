@@ -1,20 +1,33 @@
-import inspect
+from jija import apps
 
 
-class Base:
-    INITED = False
-    REQUIRED = True
+class Config:
+    __PREF = {}
 
-    def __init__(self, *, reset_init=False):
-        if self.__class__.INITED and not reset_init:
-            raise Exception(f'{self.__class__.__name__} already inited')
-
-        self.__class__.INITED = True
+    def __init__(self, **kwargs):
+        self.__class__.__PREF = kwargs
+        apps.Apps.config_init_callback(self.__class__)
 
     @classmethod
-    def clean(cls):
-        for key in cls.__dict__:
-            if not key.startswith(f'__') and not isinstance(cls.__dict__[key], (staticmethod, classmethod)):
-                setattr(cls, key, None)
+    async def freeze(cls):
+        validated_data = await cls.validate(cls.__PREF)
+        cls.set_values(validated_data)
 
-        cls.INITED = False
+    @classmethod
+    async def validate(cls, values):
+        validated_data = {}
+        for name, value in values.items():
+            name = name.upper()
+            field = getattr(cls, name)
+            validated_data[name.upper()] = await field.validate(value)
+
+        return validated_data
+
+    @classmethod
+    def set_values(cls, validated_data):
+        for name, value in validated_data.items():
+            setattr(cls, name, value)
+
+    @classmethod
+    async def preflight(cls):
+        pass
