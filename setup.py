@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.7',
+    version='0.0.8',
     description='',
     packages=[
         'jija',
@@ -11,7 +11,8 @@ setup(
         'jija.commands',
         'jija.utils',
         'jija.middlewares',
-        'jija.config'
+        'jija.config',
+        'jija.drivers'
     ],
     author='Kain',
     author_email='kainedezz.2000@gmail.com',
