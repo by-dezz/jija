@@ -1,7 +1,8 @@
 from jija.forms.fields import *
+from jija.forms import validators
 
 
-class SubclassValidator(Validator):
+class SubclassValidator(validators.Validator):
     @classmethod
     async def validate(cls, value, field):
         if not issubclass(value, field.class_pattern):

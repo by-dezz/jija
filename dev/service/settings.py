@@ -14,6 +14,7 @@ config.StructureConfig(
 )
 
 
+
 config.DriversConfig(
     database=drivers.JijaOrmDriver
 )
