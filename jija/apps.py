@@ -1,17 +1,17 @@
-import asyncio
-import importlib
-import os
-import sys
-from pathlib import Path
-
-import aiohttp_session
 from aiohttp import web
-from aiohttp_session.cookie_storage import EncryptedCookieStorage
+import asyncio
 
-from jija import middlewares
-from jija.app import App
-from jija import commands
+from pathlib import Path
+from typing import List
+import importlib
+import sys
+import os
+
 from jija.utils.collector import collect_subclasses
+from jija.config import base as config_base
+from jija import middlewares
+from jija import commands
+from jija.app import App
 from jija import config
 
 
@@ -35,14 +35,13 @@ class Apps(metaclass=AppGetter):
         'system': commands.COMMANDS
     }
 
-    __REQUIRED_CONFIGS = (
+    __REQUIRED_CONFIGS = {
         config.StructureConfig,
         config.DriversConfig,
-        config.NetworkConfig,
-        config.ProjectConfig
-    )
+        config.NetworkConfig
+    }
 
-    __INITED_CONFIGS = []
+    __INITED_CONFIGS: List['config_base.Config'] = []
     __PREFLIGHT_TASKS = []
 
     @classmethod
@@ -77,7 +76,6 @@ class Apps(metaclass=AppGetter):
         """
 
         aiohttp_app = web.Application()
-        aiohttp_session.setup(aiohttp_app, EncryptedCookieStorage(config.ProjectConfig.SECRET_KEY))
 
         aiohttp_app.middlewares.extend([
             middlewares.print_request.PrintRequest(),
@@ -87,6 +85,9 @@ class Apps(metaclass=AppGetter):
             app_class = cls.get_modify_class(config.StructureConfig.CORE_PATH)
         else:
             app_class = App
+
+        for config_unit in cls.__INITED_CONFIGS:
+            aiohttp_app = config_unit.base_app_update(aiohttp_app)
 
         app = app_class(path=config.StructureConfig.CORE_PATH, aiohttp_app=aiohttp_app, name='core')
 
@@ -102,6 +103,7 @@ class Apps(metaclass=AppGetter):
             return
 
         for sub_app_name in os.listdir(path):
+            sub_app_name: str
 
             next_path = path.joinpath(sub_app_name)
             if App.is_app(next_path):

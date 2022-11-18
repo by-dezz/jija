@@ -14,10 +14,18 @@ config.StructureConfig(
 )
 
 
-
 config.DriversConfig(
     database=drivers.JijaOrmDriver
 )
+
+
+from jija.contribute.auth import config as auth_config
+
+auth_config.AuthConfig(
+    secret_key=b'*' * 32
+)
+
+
 #
 # config.NetworkConfig(
 #     port=8081
