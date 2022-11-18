@@ -2,6 +2,7 @@ from jija import apps
 
 
 class Config:
+    __REQUIRED_ADDONS = set()
     __PREF = {}
 
     def __init__(self, **kwargs):
@@ -27,6 +28,14 @@ class Config:
     def set_values(cls, validated_data):
         for name, value in validated_data.items():
             setattr(cls, name, value)
+
+    @classmethod
+    def base_app_update(cls, aiohttp_app):
+        return aiohttp_app
+
+    @classmethod
+    def each_app_update(cls, aiohttp_app):
+        return aiohttp_app
 
     @classmethod
     async def preflight(cls):
