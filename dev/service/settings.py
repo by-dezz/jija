@@ -19,7 +19,7 @@ config.DriversConfig(
 )
 
 
-from jija.contribute.auth import config as auth_config
+from jija.contrib.auth import config as auth_config
 
 auth_config.AuthConfig(
     secret_key=b'*' * 32

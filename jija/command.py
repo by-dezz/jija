@@ -1,8 +1,6 @@
 import asyncio
 import inspect
 
-import config
-
 
 class Command:
     def __init__(self):
