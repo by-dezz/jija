@@ -1,2 +1,2 @@
 python setup.py sdist
-twine upload dist --skip-existing
+twine upload dist/* --skip-existing

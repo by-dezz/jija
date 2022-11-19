@@ -37,7 +37,9 @@ class JijaOrmDriver(DatabaseDriver):
         apps = []
         for app in Apps.apps.values():
             if app.exist('models.py'):
-                apps.append(jija_orm_config.App(name=app.name, migration_dir=app.get_import_path('migrations')))
+                path = app.name if app.parent is None else f'apps.{app.name}'
+                apps.append(jija_orm_config.App(
+                    name=app.name, path=path, migration_dir=app.get_import_path('migrations')))
 
         return apps
 

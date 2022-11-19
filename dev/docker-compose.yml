@@ -27,7 +27,7 @@ services:
 
     volumes:
       - ./service:/app
-      - ../tests:/tests
+#      - ../tests:/tests
       - ./entrypoint.sh:/entrypoint.sh
       - ./../../jija-orm/dist:/jija_orm
 

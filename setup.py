@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.8',
+    version='0.0.8-3',
     description='',
     packages=[
         'jija',
@@ -12,7 +12,8 @@ setup(
         'jija.utils',
         'jija.middlewares',
         'jija.config',
-        'jija.drivers'
+        'jija.drivers',
+        'jija.contrib.auth'
     ],
     author='Kain',
     author_email='kainedezz.2000@gmail.com',
@@ -21,7 +22,7 @@ setup(
     install_requires=[
         'aiohttp==3.8.1',
         'aiofile==3.8.1',
-        'jija_orm==0.0.1',
+        'jija_orm==0.0.2',
         'cryptography',
         'aiohttp_session[secure]',
     ]
