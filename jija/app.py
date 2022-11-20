@@ -6,7 +6,7 @@ from aiohttp import web
 from jija import config
 
 from jija.middleware import Middleware
-from jija.utils.collector import collect_subclasses
+from jija.collector import collect_subclasses
 from jija.command import Command
 from jija import router
 

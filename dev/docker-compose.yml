@@ -30,6 +30,7 @@ services:
 #      - ../tests:/tests
       - ./entrypoint.sh:/entrypoint.sh
       - ./../../jija-orm/dist:/jija_orm
+      - ./../jija:/usr/local/lib/python3.10/site-packages/jija
 
     entrypoint: ["bash", "/entrypoint.sh"]
     command: "python main.py run"

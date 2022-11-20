@@ -7,7 +7,7 @@ import importlib
 import sys
 import os
 
-from jija.utils.collector import collect_subclasses
+from jija.collector import collect_subclasses
 from jija.config import base as config_base
 from jija import middlewares
 from jija import commands
