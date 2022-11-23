@@ -26,6 +26,12 @@ auth_config.AuthConfig(
 )
 
 
+config.DocsConfig(
+
+)
+
+
+
 #
 # config.NetworkConfig(
 #     port=8081

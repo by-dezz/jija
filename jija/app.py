@@ -137,7 +137,9 @@ class App:
         aiohttp_app = aiohttp_app or web.Application()
 
         aiohttp_app.middlewares.extend(self.__middlewares)
+
         aiohttp_app.add_routes(self.__router.routes)
+        aiohttp_app['JIJA_ROUTER'] = self.__router
 
         return aiohttp_app
 

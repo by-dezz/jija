@@ -1,5 +1,5 @@
-from jija.forms.fields import *
-from jija.forms import validators
+from jija.serializers.fields import *
+from jija.serializers import validators
 
 
 class SubclassValidator(validators.Validator):

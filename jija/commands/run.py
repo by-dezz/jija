@@ -12,6 +12,8 @@ class Run(Command):
         super().__init__()
         self.close_event = asyncio.Event()
         self.reloader = reloader.Reloader(config.StructureConfig.PROJECT_PATH, self.close_event)
+        from pathlib import Path
+        self.reloader = reloader.Reloader(Path(__file__).parent.parent, self.close_event)
         self.runner = None
 
     async def run_watcher(self):

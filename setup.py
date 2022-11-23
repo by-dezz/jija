@@ -6,7 +6,7 @@ setup(
     description='',
     packages=[
         'jija',
-        'jija.forms',
+        'jija.serializers',
         'jija.commands',
         'jija.middlewares',
         'jija.config',
@@ -20,8 +20,8 @@ setup(
     install_requires=[
         'aiohttp==3.8.1',
         'aiofile==3.8.1',
-        'jija_orm==0.0.*',
         'cryptography',
         'aiohttp_session[secure]',
+        'aiohttp-swagger',
     ]
 )
