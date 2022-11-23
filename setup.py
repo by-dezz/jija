@@ -2,10 +2,11 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.9',
+    version='0.0.9-2',
     description='',
     packages=[
         'jija',
+        'jija.docs',
         'jija.serializers',
         'jija.commands',
         'jija.middlewares',
