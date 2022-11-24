@@ -5,6 +5,7 @@ from aiohttp import web
 from typing import List
 
 from jija import views, serializers
+from jija import apps, app
 
 
 class DocsProcessor:
@@ -14,31 +15,35 @@ class DocsProcessor:
     }
 
     def __init__(self, aiohttp_app: web.Application):
-        self.__aiohttp_app = aiohttp_app
+        self.__base_aiohttp_app = aiohttp_app
 
     async def create_json(self):
-        paths = await self.__parse_router()
+        paths = await self.__parse_router('', apps.Apps.core)
 
         return {
             'openapi': '3.0.1',
             'paths': paths,
         }
 
-    async def __parse_router(self) -> dict:
+    async def __parse_router(self, prefix, jija_app: app.App) -> dict:
         paths = {}
-        for endpoint in self.__aiohttp_app['JIJA_ROUTER'].endpoints:
+        for endpoint in jija_app.router.endpoints:
             if issubclass(endpoint.view, views.DocMixin):
                 path_params = re.findall(r'{(\w*)}', endpoint.path)
-                paths[endpoint.path] = await self.__parse_view(endpoint.view, path_params)
+                paths[f'{prefix}{endpoint.path}'] = await self.__parse_view(jija_app.name, endpoint.view, path_params)
+
+        for sub_app in jija_app.childes:
+            next_prefix = f'{prefix}/{sub_app.name}'
+            paths.update(await self.__parse_router(next_prefix, sub_app))
 
         return paths
 
-    async def __parse_view(self, view: typing.Type[views.View], path_params: List[str]):
+    async def __parse_view(self, app_name, view: typing.Type[views.View], path_params: List[str]):
         methods = {}
         for method in view.get_methods():
             methods[method] = {
                 'summary': getattr(view, method).__doc__,
-                'tags': [view.__name__],
+                'tags': [f'{app_name} {view.__name__}'],
 
                 "responses": {
                     "default": {}

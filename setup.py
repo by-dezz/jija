@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.9-2',
+    version='0.0.10',
     description='',
     packages=[
         'jija',

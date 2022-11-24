@@ -54,7 +54,7 @@ class Basd(views.View, views.DocMixin):
 
 
 routes = [
-    router.Endpoint('/gg/{dd}/{ahhah}/', Buba),
-    router.Endpoint('/1/', B1),
-    router.Endpoint('/dasd/', Basd),
+    router.Endpoint('/aaa/{dd}/{ahhah}/', Buba),
+    router.Endpoint('/q/', B1),
+    router.Endpoint('/asdasd/', Basd),
 ]

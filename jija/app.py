@@ -92,6 +92,7 @@ class App:
             raw_routes = getattr(routes_module, 'routes', [])
 
         app_router = router.Router(raw_routes)
+        # print(self.name, app_router.routes)
         return app_router
 
     def __get_middlewares(self) -> list:
@@ -152,3 +153,8 @@ class App:
 
     def exist(self, name: str) -> bool:
         return os.path.exists(f'/{self.__path}/{name}') or os.path.exists(f'/{self.__path}/{name}.py')
+
+    def register(self):
+        for child in self.childes:
+            child.register()
+            self.aiohttp_app.add_subapp(prefix=f'/{child.name}', subapp=child.aiohttp_app)

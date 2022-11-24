@@ -11,7 +11,7 @@ from jija.collector import collect_subclasses
 from jija.config import base as config_base
 from jija import middlewares
 from jija import commands
-from jija.app import App
+from jija import app
 from jija import config
 
 
@@ -22,9 +22,9 @@ class AppGetter(type):
         :rtype: App
         """
 
-        app = Apps.apps.get(item)
-        if app:
-            return app
+        jija_app = Apps.apps.get(item)
+        if jija_app:
+            return jija_app
 
         raise AttributeError(item)
 
@@ -84,21 +84,21 @@ class Apps(metaclass=AppGetter):
         if cls.app_exists(config.StructureConfig.CORE_PATH):
             app_class = cls.get_modify_class(config.StructureConfig.CORE_PATH)
         else:
-            app_class = App
+            app_class = app.App
 
         for config_unit in cls.__INITED_CONFIGS:
             aiohttp_app = config_unit.base_app_update(aiohttp_app)
 
-        app = app_class(path=config.StructureConfig.CORE_PATH, aiohttp_app=aiohttp_app, name='core')
+        jija_app = app_class(path=config.StructureConfig.CORE_PATH, aiohttp_app=aiohttp_app, name='core')
 
-        return app
+        return jija_app
 
     @staticmethod
     def app_exists(path: Path) -> bool:
         return path.joinpath('app.py').exists()
 
     @classmethod
-    def __collect(cls, path: Path, parent: App):
+    def __collect(cls, path: Path, parent: app.App):
         if not path.exists():
             return
 
@@ -106,11 +106,11 @@ class Apps(metaclass=AppGetter):
             sub_app_name: str
 
             next_path = path.joinpath(sub_app_name)
-            if App.is_app(next_path):
-                app = cls.get_modify_class(next_path)(path=next_path, parent=parent, name=sub_app_name)
-                cls.commands[sub_app_name] = app.commands
-                cls.apps[sub_app_name] = app
-                cls.__collect(path.joinpath(sub_app_name), app)
+            if app.App.is_app(next_path):
+                jija_app = cls.get_modify_class(next_path)(path=next_path, parent=parent, name=sub_app_name)
+                cls.commands[sub_app_name] = jija_app.commands
+                cls.apps[sub_app_name] = jija_app
+                cls.__collect(path.joinpath(sub_app_name), jija_app)
 
     @staticmethod
     def get_modify_class(path: Path) -> type:
@@ -118,23 +118,12 @@ class Apps(metaclass=AppGetter):
         import_path = ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
         module = importlib.import_module(import_path)
-        modify_class = list(collect_subclasses(module, App))
-        return modify_class[0] if modify_class else App
+        modify_class = list(collect_subclasses(module, app.App))
+        return modify_class[0] if modify_class else app.App
 
     @classmethod
-    def __register_apps(cls, app=None):
-        """
-        :type app: App
-        """
-
-        if not app:
-            app = cls.apps['core']
-
-        if not app.childes and app.name != 'core':
-            app.parent.aiohttp_app.add_subapp(f'/{app.name}', app.aiohttp_app)
-
-        for child in app.childes:
-            cls.__register_apps(child)
+    def __register_apps(cls):
+        cls.apps['core'].register()
 
     @classmethod
     def get_command(cls, module, command):
