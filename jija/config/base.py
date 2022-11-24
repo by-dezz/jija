@@ -1,3 +1,5 @@
+from aiohttp import web
+
 from jija import apps
 
 
@@ -15,7 +17,7 @@ class Config:
         cls.set_values(validated_data)
 
     @classmethod
-    async def validate(cls, values):
+    async def validate(cls, values: dict) -> dict:
         validated_data = {}
         for name, value in values.items():
             name = name.upper()
@@ -25,16 +27,16 @@ class Config:
         return validated_data
 
     @classmethod
-    def set_values(cls, validated_data):
+    def set_values(cls, validated_data: dict):
         for name, value in validated_data.items():
             setattr(cls, name, value)
 
     @classmethod
-    def base_app_update(cls, aiohttp_app):
+    def base_app_update(cls, aiohttp_app: web.Application) -> web.Application:
         return aiohttp_app
 
     @classmethod
-    def each_app_update(cls, aiohttp_app):
+    def each_app_update(cls, aiohttp_app: web.Application) -> web.Application:
         return aiohttp_app
 
     @classmethod

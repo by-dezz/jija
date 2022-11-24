@@ -1,14 +1,8 @@
 import unittest
 from pathlib import Path
 
-from jija.app import App
 from jija.apps import Apps
 from jija import config
-from jija.config import base
-from jija.utils.collector import collect_subclasses
-
-from test_data.app.normal.app import NormalApp
-from test_data.apps.with_core.core.app import CustomApp
 
 
 class AppsTests(unittest.TestCase):

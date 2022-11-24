@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from jija.forms.exceptions import ValidationError
+from jija.serializers.exceptions import ValidationError
 
 
 class Validator:
@@ -14,7 +14,7 @@ class LengthMinValidator(Validator):
     @classmethod
     async def validate(cls, value, field):
         if field.min_length and len(value) < field.min_length:
-            raise ValidationError(f'Строка должна быть больше {field.min_length} символов', value)
+            raise ValidationError(f'Value must be longer that {field.min_length} symbols', value)
 
         return value
 
@@ -23,7 +23,7 @@ class LengthMaxValidator(Validator):
     @classmethod
     async def validate(cls, value, field):
         if field.max_length and len(value) > field.max_length:
-            raise ValidationError(f'Строка должна быть больше {field.max_length} символов', value)
+            raise ValidationError(f'Value must be shorter that {field.max_length} symbols', value)
 
         return value
 
@@ -43,7 +43,7 @@ class IntegerValidator(Validator):
         try:
             return int(value)
         except ValueError:
-            raise ValidationError('Поле должно быть числом', value)
+            raise ValidationError('Value must be numeric', value)
 
 
 class FloatValidator(Validator):
@@ -52,7 +52,7 @@ class FloatValidator(Validator):
         try:
             return float(value)
         except ValueError:
-            raise ValidationError('Поле должно быть числом', value)
+            raise ValidationError('Value must be numeric', value)
 
 
 class RangeMinValidator(Validator):

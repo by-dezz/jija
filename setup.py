@@ -2,14 +2,13 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.0.8-3',
+    version='0.0.10',
     description='',
     packages=[
         'jija',
-        'jija.database',
-        'jija.forms',
+        'jija.docs',
+        'jija.serializers',
         'jija.commands',
-        'jija.utils',
         'jija.middlewares',
         'jija.config',
         'jija.drivers',
@@ -22,8 +21,8 @@ setup(
     install_requires=[
         'aiohttp==3.8.1',
         'aiofile==3.8.1',
-        'jija_orm==0.0.2',
         'cryptography',
         'aiohttp_session[secure]',
+        'aiohttp-swagger',
     ]
 )

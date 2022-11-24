@@ -1,6 +1,6 @@
 import unittest
 
-from jija.utils import collector
+from jija import collector
 
 from test_data.utils import collector_data
 

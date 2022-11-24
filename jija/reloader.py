@@ -7,13 +7,13 @@ import os
 
 class Reloader:
     def __init__(self, root_path, event: asyncio.Event):
-        self.__root_path = '/app'
-        # self.__root_path = root_path  # TODO
+        self.__root_path = root_path
         self.__event = event
+        self.__alive = True
 
     async def wait(self):
         last_hash = None
-        while True:
+        while self.__alive:
             try:
                 new_hash = await self.__get_hash(self.__root_path)
                 if last_hash is None:
@@ -54,3 +54,6 @@ class Reloader:
             return pre_hash.hexdigest()
 
         return pre_hash
+
+    def close(self):
+        self.__alive = False
