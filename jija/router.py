@@ -64,12 +64,23 @@ class Endpoint(AbsEndpoint):
 
 class Include(AbsEndpoint):
     def __init__(self, path, endpoints):
+        if path[-1] == '/':
+            raise ValueError('Include path must ends without "/"')
+
         self.__path = path
         self.__endpoints = endpoints
+
+    @property
+    def path(self):
+        return self.__path
+
+    @property
+    def endpoints(self):
+        return self.__endpoints
 
     def generate_routes(self, prefix=''):
         result = []
         for endpoint in self.__endpoints:
-            result.extend(endpoint.generate_routes(prefix))
+            result.extend(endpoint.generate_routes(f'{self.__path}{prefix}'))
 
         return result

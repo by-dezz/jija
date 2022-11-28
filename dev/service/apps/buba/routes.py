@@ -53,8 +53,15 @@ class Basd(views.View, views.DocMixin):
         return web.json_response(data={'asd': 123})
 
 
+
+
+
 routes = [
-    router.Endpoint('/aaa/{dd}/{ahhah}/', Buba),
-    router.Endpoint('/q/', B1),
+    router.Include('/ahahha', [
+        router.Endpoint('/aaa/{dd}/{ahhah}/', Buba),
+        router.Endpoint('/q/', B1),
+    ]),
     router.Endpoint('/asdasd/', Basd),
 ]
+
+

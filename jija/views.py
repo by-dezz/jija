@@ -1,7 +1,8 @@
+import json
+
 from aiohttp import web
 
-from jija import response, serializers
-# from jija.response import SerializeResponse
+from jija import response, serializers, exceptions
 
 
 class View:
@@ -40,7 +41,14 @@ class View:
     @classmethod
     async def construct(cls, request: web.Request):
         view = cls(request, request.match_info)
-        return await view.dispatch()
+        return await view.wrapper()
+
+    async def wrapper(self):
+        try:
+            return await self.dispatch()
+
+        except exceptions.ViewForceExit as exception:
+            return exception.response
 
     async def dispatch(self):
         try:
@@ -61,7 +69,10 @@ class View:
 
     async def parse_body(self) -> dict:
         if self.method != 'get':
-            return await self.request.json()
+            try:
+                return await self.request.json()
+            except json.JSONDecodeError:
+                return {}
 
         return {}
 
