@@ -6,10 +6,10 @@ from jija import config
 
 
 class AppsTests(unittest.TestCase):
-    def doCleanups(self):
-        config.ProjectConfig.clean()
-        config.StructureConfig.clean()
-        config.NetworkConfig.clean()
+    # def doCleanups(self):
+    #     config.ProjectConfig.clean()
+    #     config.StructureConfig.clean()
+    #     config.NetworkConfig.clean()
 
     # def test_init_configs(self):
     #     configs = [config_class for config_class in collect_subclasses(config, config.base.Base)]

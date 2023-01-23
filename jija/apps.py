@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 from aiohttp import web
 import asyncio
 
 from pathlib import Path
-from typing import List
 import importlib
 import sys
 import os
 
+from typing import List, TYPE_CHECKING
+if TYPE_CHECKING:
+    from jija.config.base import Config
+
+
 from jija.collector import collect_subclasses
-from jija.config import base as config_base
 from jija import middlewares
 from jija import commands
 from jija import app
@@ -41,7 +46,7 @@ class Apps(metaclass=AppGetter):
         config.NetworkConfig
     }
 
-    __INITED_CONFIGS: List['config_base.Config'] = []
+    __INITED_CONFIGS: List[Config] = []
     __PREFLIGHT_TASKS = []
 
     @classmethod

@@ -1,6 +1,6 @@
 # import asd
-from jija_orm import models
+from jija_orm import models, fields
 
 
 class A(models.Model):
-    rr = models.fields.IntegerField()
+    rr = fields.IntegerField()

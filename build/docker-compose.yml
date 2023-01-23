@@ -1,0 +1,13 @@
+version: "3.9"
+
+
+services:
+  builder:
+    image: jija-build
+    build:
+      args:
+        PYPI_USERNAME: ${PYPI_USERNAME}
+        PYPI_PASSWORD: ${PYPI_PASSWORD}
+
+      context: ..
+      dockerfile: build/Dockerfile

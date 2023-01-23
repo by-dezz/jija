@@ -1,13 +1,13 @@
 from aiohttp import web
 
-from jija import apps
-
 
 class Config:
     __REQUIRED_ADDONS = set()
     __PREF = {}
 
     def __init__(self, **kwargs):
+        from jija import apps
+
         self.__class__.__PREF = kwargs
         apps.Apps.config_init_callback(self.__class__)
 

@@ -92,7 +92,6 @@ class App:
             raw_routes = getattr(routes_module, 'routes', [])
 
         app_router = router.Router(raw_routes)
-        print(self.name, app_router.routes)
         return app_router
 
     def __get_middlewares(self) -> list:

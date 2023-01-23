@@ -13,7 +13,7 @@ class Field:
         self.default = default
 
     async def validate(self, value):
-        if not value:
+        if value is None:
             if self.required and self.default is None:
                 raise ValidationError('Required field', value)
             else:
