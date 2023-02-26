@@ -1,6 +1,7 @@
 import importlib
 import os
 from pathlib import Path
+from typing import Optional
 
 from aiohttp import web
 from jija import config
@@ -12,6 +13,9 @@ from jija import router
 
 
 class App:
+    ROUTER = router.Router
+    CUSTOM_URL_PATH: Optional[str] = None
+
     def __init__(self, *, name, path, aiohttp_app=None, parent=None):
         """
         :type name: str
@@ -35,6 +39,7 @@ class App:
         self.__aiohttp_app = None
 
         self.__childes = []
+
         self.__load(aiohttp_app)
 
     @property
@@ -75,13 +80,13 @@ class App:
         return self.__commands
 
     def __load(self, aiohttp_app: web.Application = None):
-        self.__router = self.__get_router()
+        self.__router = self.get_router()
         self.__middlewares = self.__get_middlewares()
         self.__commands = self.__get_commands()
 
         self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
 
-    def __get_router(self) -> "router.Router":
+    def get_router(self) -> "router.Router":
         if not self.exist('routes'):
             raw_routes = []
 
@@ -91,7 +96,10 @@ class App:
 
             raw_routes = getattr(routes_module, 'routes', [])
 
-        app_router = router.Router(raw_routes)
+        if self.parent is None and self.CUSTOM_URL_PATH is not None:
+            raw_routes = [router.Include(self.CUSTOM_URL_PATH, raw_routes)]
+
+        app_router = self.ROUTER(raw_routes)
         return app_router
 
     def __get_middlewares(self) -> list:
@@ -124,7 +132,7 @@ class App:
 
     @staticmethod
     def is_app(path: Path) -> bool:
-        if not path.is_dir() or not path.joinpath('app.py').exists():
+        if path.is_dir() is True or path.joinpath('app.py').exists() is False:
             return False
 
         for part in path.parts:
@@ -156,4 +164,25 @@ class App:
     def register(self):
         for child in self.childes:
             child.register()
-            self.aiohttp_app.add_subapp(prefix=f'/{child.name}', subapp=child.aiohttp_app)
+
+            self.aiohttp_app.add_subapp(prefix=child.get_url_prefix(), subapp=child.aiohttp_app)
+
+    def get_url_prefix(self) -> str:
+        """
+        Method returns app path prefix
+        If app is core we returns name or CUSTOM_URL_PATH
+        If app is secondary we need to add prefix of first app
+            because in core app we make Include if CUSTOM_URL_PATH is defined and app doesn't know itself name
+        If app is thirded we returns only it prefix
+        """
+        if not self.parent:
+            return self.CUSTOM_URL_PATH or ''
+
+        self_prefix = self.CUSTOM_URL_PATH or f'/{self.name}'
+
+        if not self.parent.parent:
+            parent_prefix = self.parent.get_url_prefix()
+        else:
+            parent_prefix = ''
+
+        return f'{parent_prefix}{self_prefix}'

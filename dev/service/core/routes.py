@@ -41,7 +41,7 @@ class B1(views.View):
         return web.json_response(data={'asd': 123})
 
 
-class Basd(views.View, views.DocMixin):
+class Name(views.View, views.DocMixin):
     """
     ahahahahhahha
     """
@@ -50,11 +50,9 @@ class Basd(views.View, views.DocMixin):
         description: This end-point allow to test that service is up.
         """
         from core import models
-        return web.json_response(data={'asd': 123})
+        return web.json_response(data={'name': 'core'})
 
 
 routes = [
-    router.Endpoint('/gg/{dd}/{ahhah}/', Buba),
-    router.Endpoint('/1/', B1),
-    router.Endpoint('/dasd/', Basd),
+    router.Endpoint('/name/', Name),
 ]

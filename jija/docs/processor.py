@@ -31,7 +31,7 @@ class DocsProcessor:
             paths[path] = await doc_view.parse()
 
         for sub_app in jija_app.childes:
-            next_prefix = f'{prefix}/{sub_app.name}'
+            next_prefix = f'{prefix}{sub_app.get_url_prefix()}'
             paths.update(await self.__parse_router(next_prefix, sub_app))
 
         return paths

@@ -13,13 +13,20 @@ class Run(Command):
         self.close_event = asyncio.Event()
         self.reloader = reloader.Reloader(config.StructureConfig.PROJECT_PATH, self.close_event)
         self.runner = None
+        self.alive = True
+
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+    def signal_handler(self, sig, frame):
+        self.alive = False
+        self.close_event.set()
 
     async def run_watcher(self):
         await self.reloader.wait()
 
     async def handle(self):
         asyncio.create_task(self.run_watcher())
-        while True:
+        while self.alive:
             self.runner = subprocess.Popen([config.StructureConfig.PYTHON_PATH, 'main.py', 'runprocess'])
             self.close_event.clear()
             await self.close_event.wait()

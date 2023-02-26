@@ -20,7 +20,7 @@ class AppTest(unittest.TestCase):
     def test_get_router(self):
         test_app = app.App(name='test', path=Path('test'))
 
-        app_router = test_app._App__get_router()
+        app_router = test_app.get_router()
         self.assertIsInstance(app_router, router.Router)
 
         test_app.exist = mock.Mock()
@@ -31,13 +31,13 @@ class AppTest(unittest.TestCase):
 
         routes_mock = mock.MagicMock(spec=[])
         with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
-            app_router = test_app._App__get_router()
+            app_router = test_app.get_router()
             self.assertIsInstance(app_router, router.Router)
 
         routes_mock = mock.MagicMock(spec=[u'routes'])
         routes_mock.routes = [router.Endpoint('/', views.View)]
         with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
-            app_router = test_app._App__get_router()
+            app_router = test_app.get_router()
             self.assertIsInstance(app_router, router.Router)
 
     def test_get_middlewares(self):
@@ -93,11 +93,11 @@ class AppTest(unittest.TestCase):
         commands_mock = mock.MagicMock(spec=[])
         with mock.patch.dict('sys.modules', {'test.commands.empty': commands_mock}):
             with mock.patch('os.listdir') as listdir_mock:
-                    listdir_mock.return_value = ['empty.py']
+                listdir_mock.return_value = ['empty.py']
 
-                    commands = test_app._App__get_commands()
-                    self.assertTrue(isinstance(commands, dict))
-                    self.assertEqual(len(commands), 0)
+                commands = test_app._App__get_commands()
+                self.assertTrue(isinstance(commands, dict))
+                self.assertEqual(len(commands), 0)
 
         class ACommand(command.Command):
             pass
@@ -132,11 +132,46 @@ class AppTest(unittest.TestCase):
                 self.assertEqual({'a_command': ACommand, 'b_command': BCommand}, commands)
 
     def test_is_app(self):
-        self.assertFalse(app.App.is_app(self.empty_path))
-        self.assertTrue(app.App.is_app(self.normal_path))
-        self.assertTrue(app.App.is_app(self.error_path))
+        path_mock = mock.MagicMock()
+        path_mock.joinpath.return_value = path_mock
+        # noinspection PyTypeHints
+        path_mock.parts: mock.Mock
 
-        self.assertFalse(app.App.is_app(Path('/tests/test_data/app/__not_app')))
+        # file is dir
+        path_mock.is_dir.return_value = True
+        path_mock.exists.return_value = True
+        self.assertFalse(app.App.is_app(path_mock))
+        self.assertEqual(0, path_mock.parts.call_count)
+
+        # file is something magic
+        path_mock.is_dir.return_value = True
+        path_mock.exists.return_value = False
+        self.assertFalse(app.App.is_app(path_mock))
+        self.assertEqual(0, path_mock.parts.call_count)
+
+        # file not exists
+        path_mock.is_dir.return_value = False
+        path_mock.exists.return_value = False
+        self.assertFalse(app.App.is_app(path_mock))
+        self.assertEqual(0, path_mock.parts.call_count)
+
+        # actual file
+        path_mock.is_dir.return_value = False
+        path_mock.exists.return_value = True
+        path_mock.parts = ['a', 'b', 'c']
+        self.assertTrue(app.App.is_app(path_mock))
+
+        # path part has __
+        path_mock.parts = ['a', 'b', '__c']
+        self.assertFalse(app.App.is_app(path_mock))
+
+        # another path part has __
+        path_mock.parts = ['__a', 'b', 'c']
+        self.assertFalse(app.App.is_app(path_mock))
+
+        # all path parts has __
+        path_mock.parts = ['__a', '__b', '__c']
+        self.assertFalse(app.App.is_app(path_mock))
 
     # def test_get_aiohttp_app(self):
     #     datasets = [
@@ -162,10 +197,42 @@ class AppTest(unittest.TestCase):
     #         self.assertEqual(data['routes'] * 2, len(list(aiohttp_app.router.routes())))
     #         self.assertEqual(data['middlewares'], len(aiohttp_app.middlewares))
 
+    def test_get_url_prefix(self):
+        app_mock = mock.MagicMock()
+        app_mock.parent = None
+
+        # Core app without custom path
+        app_mock.CUSTOM_URL_PATH = None
+        self.assertEqual('', app.App.get_url_prefix(app_mock))
+
+        # Core app with custom path
+        app_mock.CUSTOM_URL_PATH = '/custom'
+        self.assertEqual('/custom', app.App.get_url_prefix(app_mock))
+
+        parent_mock = mock.MagicMock()
+        parent_mock.get_url_prefix.return_value = '/parent-part'
+        app_mock.parent = parent_mock
+
+        # secondary app with custom path
+        parent_mock.parent = None
+        app_mock.name = 'child'
+        self.assertEqual('/parent-part/custom', app.App.get_url_prefix(app_mock))
+
+        # secondary app without custom path
+        app_mock.CUSTOM_URL_PATH = None
+        self.assertEqual('/parent-part/child', app.App.get_url_prefix(app_mock))
+
+        # thirded app without custom path
+        parent_mock.parent = True
+        self.assertEqual('/child', app.App.get_url_prefix(app_mock))
+
+        # thirded app with custom path
+        app_mock.CUSTOM_URL_PATH = '/custom'
+        self.assertEqual('/custom', app.App.get_url_prefix(app_mock))
+
 
 def get_path(section):
     return Path('/tests/test_data/broken_app').joinpath(section)
-
 
 # class AppBrokeTest(unittest.TestCase):
 #     COMMANDS = get_path('commands')

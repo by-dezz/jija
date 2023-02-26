@@ -3,20 +3,20 @@ from jija import config
 from jija import drivers
 
 
-config.DatabaseConfig(
-    host='db',
-    database='test_base',
-    password='0000',
-)
+# config.DatabaseConfig(
+#     host='db',
+#     database='test_base',
+#     password='0000',
+# )
 
 config.StructureConfig(
     project_path=Path(__file__).parent
 )
 
 
-config.DriversConfig(
-    database=drivers.JijaOrmDriver
-)
+# config.DriversConfig(
+#     database=drivers.JijaOrmDriver
+# )
 
 
 from jija.contrib.auth import config as auth_config
@@ -27,7 +27,7 @@ auth_config.AuthConfig(
 
 
 config.DocsConfig(
-
+    url='/lupa'
 )
 
 
