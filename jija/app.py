@@ -132,7 +132,7 @@ class App:
 
     @staticmethod
     def is_app(path: Path) -> bool:
-        if path.is_dir() is True or path.joinpath('app.py').exists() is False:
+        if path.is_dir() is False or path.joinpath('app.py').exists() is False:
             return False
 
         for part in path.parts:

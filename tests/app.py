@@ -137,8 +137,8 @@ class AppTest(unittest.TestCase):
         # noinspection PyTypeHints
         path_mock.parts: mock.Mock
 
-        # file is dir
-        path_mock.is_dir.return_value = True
+        # dir is file
+        path_mock.is_dir.return_value = False
         path_mock.exists.return_value = True
         self.assertFalse(app.App.is_app(path_mock))
         self.assertEqual(0, path_mock.parts.call_count)
@@ -156,7 +156,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(0, path_mock.parts.call_count)
 
         # actual file
-        path_mock.is_dir.return_value = False
+        path_mock.is_dir.return_value = True
         path_mock.exists.return_value = True
         path_mock.parts = ['a', 'b', 'c']
         self.assertTrue(app.App.is_app(path_mock))
