@@ -4,6 +4,8 @@ import aiofile
 import hashlib
 import os
 
+from jija import config
+
 
 class Reloader:
     def __init__(self, root_path, event: asyncio.Event):
@@ -40,6 +42,10 @@ class Reloader:
 
         for file in files:
             next_path = f'{path}/{file}'
+
+            if next_path in config.DevConfig.RELOADER_EXCLUDED_DIRS:
+                continue
+
             if os.path.isdir(next_path):
                 pre_hash = await self.__get_hash(next_path, pre_hash)
 

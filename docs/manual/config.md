@@ -61,3 +61,14 @@ config.DatabaseConfig(
     port='5432'
 )
 ```
+
+
+## Dev
+Dev config contains the reloader excludes.
+If you are using virtual environment, you should add it to reloader excludes in `settings.py`.
+
+```python
+config.DevConfig(
+    reloader_excluded={'venv'}
+)
+```

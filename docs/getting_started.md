@@ -41,15 +41,14 @@ config.NetworkConfig(
 )
 ```
 
-## Fill apps/my_app/views.py
-That is web logic of your project.
-    
-```python
-from jija import views, response
+If you are using virtual environment, you should add it to reloader excludes in `settings.py`.
 
-class MyView(views.View):
-    def get(self):
-        return response.JsonResponse({'status': 'ok'})
+```python
+...
+
+config.DevConfig(
+    reloader_excluded={'venv'}
+)
 ```
 
 ## Fill apps/my_app/routes.py

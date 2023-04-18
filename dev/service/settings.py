@@ -14,6 +14,10 @@ config.StructureConfig(
 )
 
 
+config.DevConfig(
+    reloader_excluded={'core'}
+)
+
 # config.DriversConfig(
 #     database=drivers.JijaOrmDriver
 # )

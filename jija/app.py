@@ -159,7 +159,7 @@ class App:
         return ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
     def exist(self, name: str) -> bool:
-        return os.path.exists(f'/{self.__path}/{name}') or os.path.exists(f'/{self.__path}/{name}.py')
+        return self.__path.joinpath(name).exists() or self.__path.joinpath(f'{name}.py').exists()
 
     def register(self):
         for child in self.childes:
