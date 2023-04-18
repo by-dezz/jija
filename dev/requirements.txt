@@ -1,0 +1,6 @@
+aiohttp==3.8.1
+aiofile==3.8.1
+cryptography
+aiohttp_session[secure]
+aiohttp-swagger
+mkdocs

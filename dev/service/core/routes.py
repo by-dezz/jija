@@ -53,6 +53,15 @@ class Name(views.View, views.DocMixin):
         return web.json_response(data={'name': 'core'})
 
 
+class WS(views.WSView):
+    async def on_message(self, message):
+        await self.send({'as': 1})
+        await self.send('as')
+        await self.send(b'asasdasd')
+
+
 routes = [
     router.Endpoint('/name/', Name),
+    router.Endpoint('/ws/', WS),
 ]
+

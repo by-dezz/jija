@@ -1,0 +1,20 @@
+site_name: Jija
+site_url: https://jija.readthedocs.io/
+
+repo_url: https://gitlab.com/by_dezz/jija
+dev_addr: 0.0.0.0:8000
+
+nav:
+    - Getting started: getting_started.md
+    - Manual:
+        - Project struct: manual/struct.md
+        - Config: manual/config.md
+        - Commands: manual/commands.md
+        - Views: manual/views.md
+        - Routes: manual/routes.md
+        - Serializers: manual/serializers.md
+        - Middlewares: manual/middlewares.md
+        - Docs: manual/docs.md
+
+theme:
+    name: mkdocs

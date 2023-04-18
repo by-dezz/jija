@@ -34,3 +34,21 @@ services:
 
     entrypoint: ["bash", "/entrypoint.sh"]
     command: "python main.py run"
+
+  docs:
+    image: jija-dev-docs
+
+    build:
+      dockerfile: dev/Dockerfile.docs
+      context: ..
+
+    volumes:
+      - ../docs/:/app/docs
+      - ../mkdocs.yml:/app/mkdocs.yml
+
+    working_dir: /app
+    ports:
+      - "8000:8000"
+
+    restart: always
+    command: mkdocs serve
