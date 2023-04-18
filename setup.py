@@ -3,7 +3,9 @@ from setuptools import setup
 setup(
     name='jija',
     version='0.2.1',
-    description='',
+    description='Async framework for web development with graceful collector',
+    url='https://gitlab.com/by_dezz/jija/',
+
     packages=[
         'jija',
         'jija.docs',
