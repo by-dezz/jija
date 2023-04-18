@@ -39,9 +39,9 @@ class AbsEndpoint:
 
 
 class Endpoint(AbsEndpoint):
-    def __init__(self, path, view: typing.Type[views.View]):
-        if not issubclass(view, views.View):
-            raise AttributeError(f'view must be a subclass of "jija.views.View", got {view}')
+    def __init__(self, path, view: typing.Type[views.ViewBase]):
+        if not issubclass(view, views.ViewBase):
+            raise AttributeError(f'view must be a subclass of "jija.views.ViewBase", got {view}')
 
         self.__path = path
         self.__view = view

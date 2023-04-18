@@ -1,42 +1,25 @@
+import inspect
 import json
+from typing import Union
 
+import aiohttp.http_websocket
 from aiohttp import web
 
 from jija import response, serializers, exceptions
 
 
-class View:
-    methods = ('get', 'post', 'patch', 'put', 'delete')
-
-    serializers_in = None
-    # serializers_out = None TODO
-
+class ViewBase:
     def __init__(self, request: web.Request, path_params: web.UrlMappingMatchInfo):
-        self.__method = request.method.lower()
-        self.__data: dict = {}
         self.__request = request
         self.__path_params = path_params
-
-    @property
-    def method(self) -> str:
-        return self.__method
 
     @property
     def request(self) -> web.Request:
         return self.__request
 
-    @property
-    def data(self) -> dict:
-        return self.__data
-
     @classmethod
     def get_methods(cls):
-        view_methods = []
-        for method in cls.methods:
-            if hasattr(cls, method):
-                view_methods.append(method)
-
-        return view_methods
+        raise NotImplementedError()
 
     @classmethod
     async def construct(cls, request: web.Request):
@@ -51,10 +34,45 @@ class View:
             return exception.response
 
     async def dispatch(self):
+        raise NotImplementedError()
+
+
+class View(ViewBase):
+    methods = ('get', 'post', 'patch', 'put', 'delete')
+
+    serializers_in = None
+
+    # serializers_out = None TODO
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.__method = self.request.method.lower()
+        self.__data: dict = {}
+
+    @property
+    def method(self) -> str:
+        return self.__method
+
+    @property
+    def data(self) -> dict:
+        return self.__data
+
+    @classmethod
+    def get_methods(cls):
+        view_methods = []
+        for method in cls.methods:
+            if hasattr(cls, method):
+                view_methods.append(method)
+
+        return view_methods
+
+    async def dispatch(self):
         try:
             await self.load_data()
             handler = getattr(self, self.method)
-            return await handler()
+            return await handler() if inspect.iscoroutinefunction(handler) else handler()
+
         except serializers.SerializeError as error:
             return response.JsonResponse(error.serializer.errors, status=400)
 
@@ -141,3 +159,59 @@ class SerializersSet:
 
 class DocMixin:
     pass
+
+
+class WSView(ViewBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__ws = None
+
+    @classmethod
+    def get_methods(cls):
+        return 'get',
+
+    @property
+    def ws(self) -> web.WebSocketResponse:
+        return self.__ws
+
+    async def dispatch(self):
+        await self.on_connect()
+        await self.process()
+        return self.ws
+
+    async def on_connect(self):
+        self.__ws = web.WebSocketResponse()
+        await self.ws.prepare(self.request)
+
+    async def process(self):
+        async for message in self.ws:
+            message: aiohttp.http_websocket.WSMessage
+
+            if message.type == web.WSMsgType.TEXT:
+                await self.on_message(message.data)
+            elif message.type == web.WSMsgType.ERROR:
+                await self.on_error(message.data)
+
+    async def on_message(self, message):
+        pass
+
+    async def on_error(self, error: str):
+        await self.close(code=500, message=error, force=True)
+
+    async def send(self, message: Union[dict, str, bytes]):
+        if isinstance(message, dict):
+            await self.ws.send_json(message)
+        elif isinstance(message, bytes):
+            await self.ws.send_bytes(message)
+        else:
+            await self.ws.send_str(message)
+
+    async def close(self, code: int = 1000, message: Union[str, bytes, dict] = None, force=False):
+        if isinstance(message, dict):
+            message = json.dumps(message).encode('utf-8')
+        elif isinstance(message, str):
+            message = message.encode('utf-8')
+
+        await self.ws.close(code=code, message=message)
+        if force is True:
+            raise exceptions.ViewForceExit(self.ws)
