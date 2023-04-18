@@ -35,6 +35,10 @@ from jija import config
 config.StructureConfig(
     project_path=Path(__file__).parent
 )
+
+config.NetworkConfig(
+    host='localhost',
+)
 ```
 
 ## Fill apps/my_app/views.py
