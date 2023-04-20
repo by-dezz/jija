@@ -26,3 +26,9 @@ class DriversConfig(base.Config):
                 aiohttp_app = item.setup(aiohttp_app)
 
         return aiohttp_app
+
+    @classmethod
+    async def preflight(cls):
+        for item in (cls.DOCS, cls.DATABASE):
+            if item:
+                await item.preflight()
