@@ -4,4 +4,4 @@ dist
 build/.env
 jija.egg-info
 *__pycache__
-dev/service/core/migrations
+dev/service/
