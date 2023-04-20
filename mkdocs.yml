@@ -18,7 +18,11 @@ nav:
 
     - Reference:
         - Config: reference/config.md
+#        - Views: reference/views.md
         - Router: reference/router.md
+#        - Serializers: reference/serializers.md
+#        - Fields: reference/fields.md
+#        - Middlewares: reference/middlewares.md
 
 theme:
     name: mkdocs
