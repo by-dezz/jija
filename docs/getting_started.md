@@ -87,6 +87,22 @@ class MyView(views.View, views.DocMixin):
 After that you can open docs on ``http://127.0.0.1:8080/docs/``.
 Only views with ``views.DocMixin`` will be included to docs.
 
+## Add serializers
+If you want to add serializers to your project, you can change parent class of your view to ``views.SerializedView`` 
+and annotate serializer class to your method. 
+
+```python
+from jija import views, serializers
+
+class MySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    age = serializers.IntegerField()
+
+class MyView(views.SerializedView):
+    def get(self, data: MySerializer):
+        ...
+```
+
 ## Include ORM
 If you want to include ORM to your project, you need to install ``jija-orm``
 ```

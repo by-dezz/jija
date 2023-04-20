@@ -1,14 +1,13 @@
-## Views
+## View
 Views are the main way to interact with the user.
 They are responsible for rendering the data and handling the user's requests.
-We recommend to create a `views.py` file in each app directory.
-The views are defined as classes that inherit from the `View` class. 
+
 The `View` will be called when the user requests the path specified in the `Endpoint` class.
 The `View` methods are creates by defining the `get`, `post`, `put`, `patch`, `delete` methods in the class.
-You can define default and async methods.
-You can add serializers to the view by adding the `serializers_in` attribute to the class,
-it can be a dictionary or a `SerializersSet`.
 
+We recommend to create a `views.py` file in each app directory.
+The views are defined as classes that inherit from the `View` class. 
+You can define default and async methods.
 
 ```python
 from jija import views
@@ -31,21 +30,26 @@ if color == 'red':
 ...
 ```
 
-## SerializersSet
-Helped class for adding serializers to the view.
-In constructor you can pass a serializers as a attributes that will be used in same methods.
+## SerializedView
+SerializerView is a subclass of the `View` class.
+You can use the `SerializedView` class to serialize the data before processing it.
+
+For add a serializer, you need to add arg to your method and annotate serializer class to it.
+All data from serializer will be added to docs if it is enabled and `DocMixin` is added to the view.
 
 ```python
-from jija import views
+from jija import views, serializers
 
-serializers_in = views.SerializersSet(
-    get=GetSerializer,
-    post=PostSerializer,
-    delete=DeleteSerializer
-)
+class MySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    age = serializers.IntegerField()
+
+class MyView(views.SerializedView):
+    def get(self, data: MySerializer):
+        ...
 ```
 
-## WS
+## WSView
 Websocket view.
 It is a view that is called when the user connects to the websocket.
 To create actions to incoming messages, you need to define the `on_message` method.
@@ -55,7 +59,7 @@ You can redefine the `on_connect` and `on_error` methods to add actions when the
 ```python
 from jija import views
 
-class MyWS(views.WS):
+class MyWS(views.WSView):
     def on_message(self, message):
         self.send(message)     
 ```
