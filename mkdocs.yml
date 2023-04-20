@@ -15,6 +15,7 @@ nav:
         - Serializers: manual/serializers.md
         - Middlewares: manual/middlewares.md
         - Docs: manual/docs.md
+        - Drivers: manual/drivers.md
 
     - Reference:
         - Config: reference/config.md

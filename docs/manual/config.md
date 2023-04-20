@@ -25,16 +25,6 @@ config.NetworkConfig(
 )
 ```
 
-## Docs
-Dock contains the path to the docs directory and the path to the docs template.
-You need to init the docs config if you want to use the docs.
-
-```python
-config.DocsConfig(
-    url='/custom-docs',
-)
-``` 
-
 ## Drivers
 The drivers config contains the drivers that will be used in the project.
 It contains the database driver, the cache driver and the session driver.
@@ -43,8 +33,8 @@ By default, jija has drivers.JijaOrmDriver and drivers.DocsDriver.
 
 ```python
 config.DriversConfig(
-    database='my_drivers.MyDatabaseDriver',
-    docs='my_drivers.DocDriver',
+    database=my_drivers.MyDatabaseDriver(),
+    docs=my_drivers.DocDriver(),
 )
 ```
 

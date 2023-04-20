@@ -1,24 +1,34 @@
 ## Include
-You need to init ``config.DocsConfig`` in ``settings.py``.
+You need to add `jija.conf.DriversConf` 
+and add `jija.contrib.swagger.driver.SwaggerDriver` to it in ``settings.py``.
 
 ```python
-config.DocsConfig()
+from jija.contrib.swagger.driver import SwaggerDriver
+...
+config.DriversConfig(
+    docs=SwaggerDriver()
+)
 ```
 
-And add ``views.DocMixin`` to view in ``apps/my_app/views.py``.
+Then add ``jija.views.DocMixin`` to view in ``apps/my_app/views.py``.
 
 ```python
 class MyView(views.View, views.DocMixin): ...
 ```
 
 After that you can open docs on ``http://127.0.0.1:8080/docs/``.
-Only views with ``views.DocMixin`` will be included to docs.
+Only views with ``jija.views.DocMixin`` will be included to docs.
 
 ## Custom url
-If you want to change url of docs, you need to provide ``url`` arg to ``config.DocsConfig``.
+If you want to change url of docs,
+you need to provide ``url`` arg to ``jija.contrib.swagger.driver.Swagger``.
 
 ```python
-config.DocsConfig(url='/custom-docs')
+from jija.contrib.swagger.driver import SwaggerDriver
+...
+config.DriversConfig(
+    docs=SwaggerDriver(url='/custom-docs')
+)
 ```
 
 ## Adding fields

@@ -68,15 +68,18 @@ After that you can start project with command ``python main.py run``
 and go to ``http://127.0.0.1:8080/my_app/`` there u will see ``{"status": "ok"}``.
 
 ## Include docs
-If you want to include docs to your project, you need to init ``config.DocsConfig`` in ``settings.py``.
+If you want to include docs to your project, you need to add
+`jija.conf.DriversConf` and add `jija.contrib.swagger.driver.SwaggerDriver` to it in ``settings.py``.
 
 ```python
+from jija.contrib.swagger.driver import SwaggerDriver
 ...
-
-config.DocsConfig()
+config.DriversConfig(
+    docs=SwaggerDriver()
+)
 ```
 
-And add ``views.DocMixin`` to view in ``apps/my_app/views.py``.
+Then add ``jija.views.DocMixin`` to view in ``apps/my_app/views.py``.
 
 ```python
 ...
@@ -85,10 +88,10 @@ class MyView(views.View, views.DocMixin):
 ```
 
 After that you can open docs on ``http://127.0.0.1:8080/docs/``.
-Only views with ``views.DocMixin`` will be included to docs.
+Only views with ``jija.views.DocMixin`` will be included to docs.
 
 ## Add serializers
-If you want to add serializers to your project, you can change parent class of your view to ``views.SerializedView`` 
+If you want to add serializers to your project, you can change parent class of your view to ``jija.views.SerializedView`` 
 and annotate serializer class to your method. 
 
 ```python
@@ -109,7 +112,7 @@ If you want to include ORM to your project, you need to install ``jija-orm``
 pip install jija-orm
 ```
 
-Then add database driver and init ``config.DatabaseConfig`` in ``settings.py``.
+Then add database driver and init ``jija.config.DatabaseConfig`` in ``settings.py``.
 
 ```python
 from jija import drivers
