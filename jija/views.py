@@ -132,7 +132,7 @@ class _SerializedViewMeta(type):
 class SerializedView(View, metaclass=_SerializedViewMeta):
     async def dispatch(self):
         try:
-            await super().dispatch()
+            return await super().dispatch()
 
         except serializers.SerializeError as error:
             return response.JsonResponse(error.serializer.errors, status=400)
