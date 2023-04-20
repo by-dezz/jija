@@ -18,3 +18,11 @@ class DriversConfig(base.Config):
 
     def __init__(self, *, docs=None, database=None):
         super().__init__(docs=docs, database=database)
+
+    @classmethod
+    def base_app_update(cls, aiohttp_app: web.Application) -> web.Application:
+        for item in (cls.DOCS, cls.DATABASE):
+            if item:
+                aiohttp_app = item.setup(aiohttp_app)
+
+        return aiohttp_app

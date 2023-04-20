@@ -1,8 +1,6 @@
-
 from . import config
 from . import commands
 from . import contrib
-from . import docs
 from . import drivers
 from . import middlewares
 from . import serializers

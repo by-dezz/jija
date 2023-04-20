@@ -5,7 +5,7 @@ from aiohttp import web
 from typing import List, Dict
 
 from jija import views, serializers, router
-from jija import apps, app
+from jija import app
 
 
 class DocsProcessor:
@@ -13,6 +13,7 @@ class DocsProcessor:
         self.__base_aiohttp_app = aiohttp_app
 
     async def create_json(self):
+        from jija import apps
         paths = await self.__parse_router('', apps.Apps.core)
 
         return {

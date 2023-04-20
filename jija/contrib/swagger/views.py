@@ -1,7 +1,5 @@
-from aiohttp import web
-
 from jija import response
-from . import processor
+from jija.contrib.swagger import processor
 
 
 async def swagger_view(request):
