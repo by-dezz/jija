@@ -1,4 +1,5 @@
-from jija.config import base, fields
+from jija.config import base
+from jija.serializers import fields
 
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 import aiohttp_session

@@ -1,5 +1,6 @@
 from jija import docs
-from . import base, fields
+from . import base
+from jija.serializers import fields
 
 
 class DocsConfig(base.Config):

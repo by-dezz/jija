@@ -1,12 +1,20 @@
-from jija.config import base, fields
+from aiohttp import web
+
+from jija.config import base
+from jija.serializers import fields
 from jija import drivers
 
 
 class DriversConfig(base.Config):
-    DOCS: drivers.DocsDriver = fields.ClassField(
-        class_pattern=drivers.DocsDriver, default=drivers.DocsDriver)
-    DATABASE: drivers.DatabaseDriver = fields.ClassField(
-        class_pattern=drivers.DatabaseDriver, default=drivers.DatabaseDriver)
+    DOCS: drivers.DocsDriver = fields.InstanceField(
+        instance_pattern=drivers.DocsDriver,
+        required=False,
+    )
+
+    DATABASE: drivers.DatabaseDriver = fields.InstanceField(
+        instance_pattern=drivers.DatabaseDriver,
+        required=False
+    )
 
     def __init__(self, *, docs=None, database=None):
         super().__init__(docs=docs, database=database)

@@ -89,3 +89,21 @@ class OptionsValidator(Validator):
             raise ValidationError(f'Недопустимое значение', value)
 
         return value
+
+
+class SubclassValidator(Validator):
+    @classmethod
+    async def validate(cls, value, field):
+        if not issubclass(value, field.class_pattern):
+            raise ValidationError(f'Value must be subclass of {field.class_pattern}, not {type(value)}', value)
+
+        return value
+
+
+class InstanceValidator(Validator):
+    @classmethod
+    async def validate(cls, value, field):
+        if not isinstance(value, field.instance_pattern):
+            raise ValidationError(f'Value must be instance of {field.instance_pattern}, not {type(value)}', value)
+
+        return value
