@@ -86,14 +86,19 @@ class DocView:
                 }
             }
 
-            serializer_in = await self.__view.get_in_serializer(method)
+            handler = getattr(self.__view, method)
+            if not hasattr(handler, '__serializers__'):
+                continue
 
-            if serializer_in:
+            fields = {}
+            for serializer in handler.__serializers__.values():
+                fields.update(serializer.get_fields())
+
+            if fields:
                 if method == 'get':
-                    methods[method]['parameters'] += self.create_params(serializer_in.get_fields(), 'query')
-
+                    methods[method]['parameters'] += self.create_params(fields, 'query')
                 else:
-                    methods[method]["requestBody"] = self.__parse_serializer_in(serializer_in)
+                    methods[method]["requestBody"] = self.__parse_serializer_in(fields)
 
         return methods
 
@@ -111,9 +116,7 @@ class DocView:
         return fields
 
     @staticmethod
-    def __parse_serializer_in(serializer: serializers.Serializer):
-        fields = serializer.get_fields()
-
+    def __parse_serializer_in(fields: Dict[str, serializers.fields.Field]):
         required = []
         properties = {}
         for name, field in fields.items():
