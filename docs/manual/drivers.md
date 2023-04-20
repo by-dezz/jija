@@ -4,7 +4,7 @@ For config, you can use `jija.config.DriversConfig` in `settings.py`.
 
 You can create your own drivers and use them in the project.
 
-By default, jija has `jija.drivers.JinjaORMDriver` for database
+By default, jija has `jija.contrib.jija_orm.driver.JinjaORMDriver` for database
 and `jija.contrib.swagger.driver.SwaggerDriver` for docs.
 
 ## Include
@@ -30,3 +30,21 @@ config.DriversConfig(
     docs=SwaggerDriver(url='/custom-docs')
 )
 ``` 
+
+
+## Database driver
+By default, jija has driver only for `jija-orm`, it located in
+`jija.contrib.jija_orm.driver.JinjaORMDriver` for database.
+
+```python
+from jija.contrib.jija_orm.driver import JijaOrmDriver
+...
+
+config.DriversConfig(
+    ...,
+    database=JijaOrmDriver(
+        database='postgres',
+        password='0000',
+    )
+)
+```

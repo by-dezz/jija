@@ -112,21 +112,18 @@ If you want to include ORM to your project, you need to install ``jija-orm``
 pip install jija-orm
 ```
 
-Then add database driver and init ``jija.config.DatabaseConfig`` in ``settings.py``.
+Then init database driver ``jija.contrib.jija_orm.driver.JijaOrmDriver`` in ``settings.py``.
 
 ```python
-from jija import drivers
-
+from jija.contrib.jija_orm.driver import JijaOrmDriver
 ...
 
 config.DriversConfig(
-    database=drivers.JijaOrmDriver
-)
-
-config.DatabaseConfig(
-    host='db',
-    database='test_base',
-    password='0000',
+    ...,
+    database=JijaOrmDriver(
+        database='postgres',
+        password='0000',
+    )
 )
 ```
 

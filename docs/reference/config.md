@@ -57,54 +57,11 @@
     Port to bind to.
 
 
-## DatabaseConfig
-    class jija.config.DatabaseConfig(
-        *,
-        user: str = 'postgres',
-        password: str,
-        host: str = 'localhost',
-        port: int = 5432,
-        database: str,
-    )
-
-#### Parameters
-`user`
-    The user to connect as.
-
-`password`
-    The password to use.
-
-`host`
-    The host to connect to.
-
-`port`
-    The port to connect to.
-
-`database`
-    The database to connect to.
-
-#### Attributes
-`USER: str`
-    The user to connect as.
-
-`PASSWORD: str`
-    The password to use.
-
-`HOST: str`
-    The host to connect to.
-
-`PORT: int`
-    The port to connect to.
-
-`DATABASE: str`
-    The database to connect to.
-
-
 ## DriversConfig
     class jija.config.DriversConfig(
         *,
-        docs: jija.drivers.DocsDriver = jija.drivers.DocsDriver,
-        database: drivers.DatabaseDriver = drivers.DatabaseDriver,
+        docs: jija.drivers.DocsDriver,
+        database: jija.drivers.DatabaseDriver,
     )
 
 #### Parameters
@@ -120,21 +77,6 @@
 
 `DATABASE: drivers.DatabaseDriver`
     The database driver to use.
-
-
-## DocksConfig
-    class jija.config.DocsConfig(
-        *,
-        url='/docs',
-    )
-
-#### Parameters
-`url`
-    The url to serve the docs on.
-
-#### Attributes
-`URL: str`
-    The url to serve the docs on.
 
 
 ## DevConfig
