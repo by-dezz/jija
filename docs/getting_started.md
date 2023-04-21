@@ -17,7 +17,7 @@
 
 ## Fill main.py
 That is entry point of your project.
-```python
+```python title="main.py"
 from jija.apps import Apps
 
 if __name__ == '__main__':
@@ -25,10 +25,13 @@ if __name__ == '__main__':
     Apps.run_command()
 ```
 
+1.  :man_raising_hand: I'm a code annotation! I can contain `code`, __formatted
+    text__, images, ... basically anything that can be written in Markdown.
+
 ## Fill settings.py
 That is settings file of your project.
     
-```python
+```python title="settings.py"
 from pathlib import Path
 from jija import config
 
@@ -43,7 +46,7 @@ config.NetworkConfig(
 
 If you are using virtual environment, you should add it to reloader excludes in `settings.py`.
 
-```python
+```python title="settings.py"
 ...
 
 config.DevConfig(
@@ -54,7 +57,7 @@ config.DevConfig(
 ## Fill apps/my_app/routes.py
 That are paths to your views.
     
-```python
+```python title="apps/my_app/routes.py"
 from jija import router
 from .views import *
 
@@ -71,7 +74,7 @@ and go to ``http://127.0.0.1:8080/my_app/`` there u will see ``{"status": "ok"}`
 If you want to include docs to your project, you need to add
 `jija.conf.DriversConf` and add `jija.contrib.swagger.driver.SwaggerDriver` to it in ``settings.py``.
 
-```python
+```python title="settings.py"
 from jija.contrib.swagger.driver import SwaggerDriver
 ...
 config.DriversConfig(
@@ -81,7 +84,7 @@ config.DriversConfig(
 
 Then add ``jija.views.DocMixin`` to view in ``apps/my_app/views.py``.
 
-```python
+```python title="apps/my_app/views.py"
 ...
 class MyView(views.View, views.DocMixin):
 ... 
@@ -94,7 +97,7 @@ Only views with ``jija.views.DocMixin`` will be included to docs.
 If you want to add serializers to your project, you can change parent class of your view to ``jija.views.SerializedView`` 
 and annotate serializer class to your method. 
 
-```python
+```python title="apps/my_app/views.py"
 from jija import views, serializers
 
 class MySerializer(serializers.Serializer):
@@ -114,7 +117,7 @@ pip install jija-orm
 
 Then init database driver ``jija.contrib.jija_orm.driver.JijaOrmDriver`` in ``settings.py``.
 
-```python
+```python title="settings.py"
 from jija.contrib.jija_orm.driver import JijaOrmDriver
 ...
 
@@ -129,7 +132,7 @@ config.DriversConfig(
 
 Then you need to create ``models.py`` in ``apps/my_app`` and create models.
 
-```python
+```python title="apps/my_app/models.py"
 from jija_orm import models, fields
 
 class MyModel(models.Model):
@@ -144,7 +147,7 @@ Auth is using external lib for more info see [aiohttp_session](https://aiohttp-s
 
 If you want to include auth to your project, you need to init 'auth_config.AuthConfig' in 'settings.py'.
 
-```python
+```python title="settings.py"
 from jija.contrib.auth import config as auth_config
 ...
 
@@ -166,7 +169,7 @@ else you can create it in any app.
 
 And fill ``core/middlewares.py``
 
-```python
+```python title="core/middlewares.py"
 import aiohttp_session
 from aiohttp import web
 from jija import middleware
@@ -187,6 +190,28 @@ class Session(middleware.Middleware):
     async def get_user(self, request):
         # add your logic here
 ```
+
+
+## Create custom commands
+If you want to create custom commands you need to create ``commands`` dir in any app 
+and create ``<command name>.py`` in it.
+
+    my_project
+    ├── apps
+    ├── commands
+    │   └── <command name>.py
+
+And fill ``<command name>.py``
+```python title="my_app/commands/<command name>.py"
+from jija import commands
+
+class Command(commands.Command):
+    def handle(self):
+        print('Hello world')
+```
+
+After that you can run your command with ``python main.py <command name>`` if you created it in core app 
+else you can run it with ``python main.py my_app.<command name>``.
 
 
 ## Advanced layout

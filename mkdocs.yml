@@ -23,3 +23,13 @@ nav:
 
 theme:
     name: material
+
+markdown_extensions:
+    - pymdownx.details
+    - pymdownx.highlight:
+        anchor_linenums: true
+        line_spans: __span
+        pygments_lang_class: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
