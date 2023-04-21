@@ -1,55 +1,70 @@
-import importlib
+from typing import Optional, Type
+
 import os
+
+import importlib
 from pathlib import Path
-from typing import Optional
 
 from aiohttp import web
-from jija import config
 
-from jija.middleware import Middleware
 from jija.collector import collect_subclasses
+from jija.middleware import Middleware
 from jija.command import Command
+from jija import config
 from jija import router
 
 
 class App:
-    ROUTER = router.Router
     CUSTOM_URL_PATH: Optional[str] = None
 
-    def __init__(self, *, name, path, aiohttp_app=None, parent=None):
-        """
-        :type name: str
-        :type path: jija.utils.path.Path
-        :type aiohttp_app: web.Application
-        :type parent: App
-        """
-
-        self.__parent = parent
+    def __init__(
+            self,
+            name: str,
+            path: Path,
+            parent: Optional['App'],
+            app_router: router.Router,
+            middlewares: list[Middleware],
+            commands: dict[str, Type[Command]],
+    ):
         if parent:
             parent.add_child(self)
 
-        self.__path = path
         self.__name = name
-        self.__is_core = aiohttp_app is not None
-
-        self.__router = None
-        self.__middlewares = None
-        self.__commands = None
-
-        self.__aiohttp_app = None
-
+        self.__path = path
+        self.__parent = parent
+        self.__router = app_router
+        self.__middlewares = middlewares
+        self.__commands = commands
         self.__childes = []
 
-        self.__load(aiohttp_app)
+        self.__aiohttp_app = self.create_aiohttp_app()
+
+    @classmethod
+    def construct(cls, name: str, path: Path, parent: Optional['App'] = None, extends: Optional['App'] = None):
+        app_router = cls.get_router(path, parent)
+        middlewares = cls.get_middlewares(path)
+        commands = cls.get_commands(path)
+
+        if extends:
+            app_router += extends.router
+            middlewares.extend(extends.middlewares)
+            commands.update(extends.commands)
+
+        return cls(
+            name,
+            path,
+            parent,
+            app_router,
+            middlewares,
+            commands,
+        )
 
     @property
-    def parent(self):
-        """:rtype: App"""
+    def parent(self) -> Optional['App']:
         return self.__parent
 
     @property
-    def name(self):
-        """:rtype: str"""
+    def name(self) -> str:
         return self.__name
 
     @property
@@ -57,18 +72,15 @@ class App:
         return self.__router
 
     @property
-    def middlewares(self):
-        """:rtype: list[Middleware]"""
+    def middlewares(self) -> list[Middleware]:
         return self.__middlewares
 
     @property
-    def aiohttp_app(self):
-        """:rtype: web.Application"""
+    def aiohttp_app(self) -> web.Application:
         return self.__aiohttp_app
 
     @property
-    def childes(self):
-        """:rtype: list[App]"""
+    def childes(self) -> list['App']:
         return self.__childes
 
     @property
@@ -76,52 +88,48 @@ class App:
         return self.__path
 
     @property
-    def commands(self) -> list:
+    def commands(self) -> dict[str, Type[Command]]:
         return self.__commands
 
-    def __load(self, aiohttp_app: web.Application = None):
-        self.__router = self.get_router()
-        self.__middlewares = self.__get_middlewares()
-        self.__commands = self.__get_commands()
-
-        self.__aiohttp_app = self.get_aiohttp_app(aiohttp_app)
-
-    def get_router(self) -> "router.Router":
-        if not self.exist('routes'):
+    @classmethod
+    def get_router(cls, path: Path, parent: Optional['App']) -> "router.Router":
+        if not cls.cls_exist(path, 'routes'):
             raw_routes = []
 
         else:
-            import_path = self.get_import_path('routes')
+            import_path = cls.cls_get_import_path(path, 'routes')
             routes_module = importlib.import_module(import_path)
 
             raw_routes = getattr(routes_module, 'routes', [])
 
-        if self.parent is None and self.CUSTOM_URL_PATH is not None:
-            raw_routes = [router.Include(self.CUSTOM_URL_PATH, raw_routes)]
+        if parent is None and cls.CUSTOM_URL_PATH is not None:
+            raw_routes = [router.Include(cls.CUSTOM_URL_PATH, raw_routes)]
 
-        app_router = self.ROUTER(raw_routes)
+        app_router = router.Router(raw_routes)
         return app_router
 
-    def __get_middlewares(self) -> list:
-        if not self.exist('middlewares'):
+    @classmethod
+    def get_middlewares(cls, path: Path) -> list[Middleware]:
+        if not cls.cls_exist(path, 'middlewares'):
             return []
 
-        import_path = self.get_import_path('middlewares')
+        import_path = cls.cls_get_import_path(path, 'middlewares')
         middlewares_module = importlib.import_module(import_path)
         middlewares = collect_subclasses(middlewares_module, Middleware)
 
         return list(map(lambda middleware: middleware(), middlewares))
 
-    def __get_commands(self) -> dict:
-        if not self.exist('commands'):
+    @classmethod
+    def get_commands(cls, path: Path) -> dict[str, Type[Command]]:
+        if not cls.cls_exist(path, 'commands'):
             return {}
 
         commands = {}
-        commands_path = self.__path.joinpath('commands')
+        commands_path = path.joinpath('commands')
         for file in os.listdir(commands_path):
             if file.endswith('.py') and not file.startswith('_'):
 
-                import_path = self.get_import_path(f'commands.{file.removesuffix(".py")}')
+                import_path = cls.cls_get_import_path(path, f'commands.{file.removesuffix(".py")}')
                 command_module = importlib.import_module(import_path)
 
                 command = list(collect_subclasses(command_module, Command))
@@ -141,13 +149,13 @@ class App:
 
         return True
 
-    def get_aiohttp_app(self, aiohttp_app: web.Application = None) -> web.Application:
-        aiohttp_app = aiohttp_app or web.Application()
+    def create_aiohttp_app(self) -> web.Application:
+        aiohttp_app = web.Application()
 
-        aiohttp_app.middlewares.extend(self.__middlewares)
+        aiohttp_app.middlewares.extend(self.middlewares)
 
-        aiohttp_app.add_routes(self.__router.routes)
-        aiohttp_app['JIJA_ROUTER'] = self.__router
+        aiohttp_app.add_routes(self.router.routes)
+        aiohttp_app['JIJA_ROUTER'] = self.router
 
         return aiohttp_app
 
@@ -155,11 +163,19 @@ class App:
         self.__childes.append(child)
 
     def get_import_path(self, to: str) -> str:
-        modify_class_path = self.path.joinpath(to)
+        return self.cls_get_import_path(self.path, to)
+
+    @staticmethod
+    def cls_get_import_path(path: Path, to: str) -> str:
+        modify_class_path = path.joinpath(to)
         return ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
     def exist(self, name: str) -> bool:
-        return self.__path.joinpath(name).exists() or self.__path.joinpath(f'{name}.py').exists()
+        return self.cls_exist(self.path, name)
+
+    @staticmethod
+    def cls_exist(path: Path, name: str) -> bool:
+        return path.joinpath(name).exists() or path.joinpath(f'{name}.py').exists()
 
     def register(self):
         for child in self.childes:
@@ -175,6 +191,7 @@ class App:
             because in core app we make Include if CUSTOM_URL_PATH is defined and app doesn't know itself name
         If app is thirded we returns only it prefix
         """
+
         if not self.parent:
             return self.CUSTOM_URL_PATH or ''
 
@@ -186,3 +203,6 @@ class App:
             parent_prefix = ''
 
         return f'{parent_prefix}{self_prefix}'
+
+    def aiohttp_app_update(self, new_aiohttp_app: web.Application):
+        self.__aiohttp_app = new_aiohttp_app

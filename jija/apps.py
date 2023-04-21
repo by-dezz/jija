@@ -1,32 +1,24 @@
 from __future__ import annotations
 
-from aiohttp import web
-import asyncio
-
-from pathlib import Path
-import importlib
-import sys
-import os
-
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, Optional
 if TYPE_CHECKING:
     from jija.config.base import Config
 
+from pathlib import Path
+import importlib
+import asyncio
+import sys
+import os
 
 from jija.collector import collect_subclasses
-from jija import middlewares
-from jija import commands
-from jija import app
+from jija.command import Command
+import jija.base_app.app
 from jija import config
+from jija import app
 
 
 class AppGetter(type):
-    def __getattr__(self, item):
-        """
-        :type item: str
-        :rtype: App
-        """
-
+    def __getattr__(self, item: str) -> app.App:
         jija_app = Apps.apps.get(item)
         if jija_app:
             return jija_app
@@ -35,10 +27,7 @@ class AppGetter(type):
 
 
 class Apps(metaclass=AppGetter):
-    apps = {}
-    commands = {
-        'system': commands.COMMANDS
-    }
+    apps: dict[str, app.App] = {}
 
     __REQUIRED_CONFIGS = {
         config.StructureConfig,
@@ -46,7 +35,7 @@ class Apps(metaclass=AppGetter):
         config.NetworkConfig
     }
 
-    __INITED_CONFIGS: List[Config] = []
+    __INITED_CONFIGS: list[Config] = []
     __PREFLIGHT_TASKS = []
 
     @classmethod
@@ -75,28 +64,26 @@ class Apps(metaclass=AppGetter):
             cls.__PREFLIGHT_TASKS.append(config_class.preflight)
 
     @classmethod
-    def __create_base_app(cls):
-        """
-        :rtype: web.Application
-        """
-
-        aiohttp_app = web.Application()
-
-        aiohttp_app.middlewares.extend([
-            middlewares.print_request.PrintRequest(),
-        ])
+    def __create_base_app(cls) -> app.App:
+        base_app = jija.base_app.app.BaseApp.construct(
+            name='core',
+            path=Path(jija.base_app.app.__file__).parent,
+            parent=None,
+        )
 
         if cls.app_exists(config.StructureConfig.CORE_PATH):
-            app_class = cls.get_modify_class(config.StructureConfig.CORE_PATH)
+            core_app = cls.get_modify_class(config.StructureConfig.CORE_PATH).construct(
+                name='core',
+                path=config.StructureConfig.CORE_PATH,
+                extends=base_app
+            )
         else:
-            app_class = app.App
+            core_app = base_app
 
         for config_unit in cls.__INITED_CONFIGS:
-            aiohttp_app = config_unit.base_app_update(aiohttp_app)
+            core_app.aiohttp_app_update(config_unit.base_app_update(core_app.aiohttp_app))
 
-        jija_app = app_class(path=config.StructureConfig.CORE_PATH, aiohttp_app=aiohttp_app, name='core')
-
-        return jija_app
+        return core_app
 
     @staticmethod
     def app_exists(path: Path) -> bool:
@@ -112,13 +99,12 @@ class Apps(metaclass=AppGetter):
 
             next_path = path.joinpath(sub_app_name)
             if app.App.is_app(next_path):
-                jija_app = cls.get_modify_class(next_path)(path=next_path, parent=parent, name=sub_app_name)
-                cls.commands[sub_app_name] = jija_app.commands
+                jija_app = cls.get_modify_class(next_path).construct(path=next_path, parent=parent, name=sub_app_name)
                 cls.apps[sub_app_name] = jija_app
                 cls.__collect(path.joinpath(sub_app_name), jija_app)
 
     @staticmethod
-    def get_modify_class(path: Path) -> type:
+    def get_modify_class(path: Path) -> Type[app.App]:
         modify_class_path = path.joinpath('app')
         import_path = ".".join(modify_class_path.relative_to(config.StructureConfig.PROJECT_PATH).parts)
 
@@ -131,22 +117,14 @@ class Apps(metaclass=AppGetter):
         cls.apps['core'].register()
 
     @classmethod
-    def get_command(cls, module, command):
-        """
-        :type module: str
-        :type command: str
-        :rtype: type
-        """
-
-        if module is None:
-            module = 'system'
-
-        return cls.commands[module][command]
+    def get_command(cls, module: Optional[list[str]], command: str) -> Type[Command]:
+        return cls.apps[module or 'core'].commands[command]
 
     @classmethod
     def run_command(cls):
         args = sys.argv
         command = args[1].split('.')
+
         Apps.load()
         asyncio.get_event_loop().run_until_complete(cls.__preflight())
 

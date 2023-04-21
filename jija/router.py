@@ -32,6 +32,12 @@ class Router:
     def __str__(self):
         return self.__repr__()
 
+    def __add__(self, other):
+        if not isinstance(other, Router):
+            raise TypeError(f'Can not add "Router" to {type(other)}')
+
+        return Router(self.endpoints + other.endpoints)
+
 
 class AbsEndpoint:
     def generate_routes(self, prefix=''):

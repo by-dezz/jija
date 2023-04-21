@@ -1,8 +1,6 @@
 from . import config
-from . import commands
-from . import contrib
+from .base_app import commands, middlewares
 from . import drivers
-from . import middlewares
 from . import serializers
 from . import app
 from . import apps

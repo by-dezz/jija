@@ -18,46 +18,60 @@ class AppTest(unittest.TestCase):
         self.broken = Path('/tests/test_data/app/broken')
 
     def test_get_router(self):
-        test_app = app.App(name='test', path=Path('test'))
-
-        app_router = test_app.get_router()
+        path = Path('test')
+        app_router = app.App.get_router(path, None)
         self.assertIsInstance(app_router, router.Router)
 
-        test_app.exist = mock.Mock()
-        test_app.exist.return_value = True
+        app_path = {
+            'cls_get_import_path': lambda *_: 'test.routes',
+            'cls_exist': lambda *_: True
+        }
 
-        test_app.get_import_path = mock.Mock()
-        test_app.get_import_path.return_value = 'test.routes'
+        with mock.patch.multiple(app.App, **app_path):
+            routes_mock = mock.MagicMock(spec=[])
+            with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
+                app_router = app.App.get_router(path, None)
+                self.assertIsInstance(app_router, router.Router)
+                self.assertEqual(len(app_router.routes), 0)
 
-        routes_mock = mock.MagicMock(spec=[])
-        with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
-            app_router = test_app.get_router()
-            self.assertIsInstance(app_router, router.Router)
+            routes_mock = mock.MagicMock(spec=[u'routes'])
+            routes_mock.routes = [router.Endpoint('/', views.View)]
+            with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
+                app_router = app.App.get_router(path, None)
 
-        routes_mock = mock.MagicMock(spec=[u'routes'])
-        routes_mock.routes = [router.Endpoint('/', views.View)]
-        with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
-            app_router = test_app.get_router()
-            self.assertIsInstance(app_router, router.Router)
+                self.assertIsInstance(app_router, router.Router)
+                self.assertEqual(len(app_router.endpoints), 1)
+
+        app_path['CUSTOM_URL_PATH'] = '/custom'
+        with mock.patch.multiple(app.App, **app_path):
+            routes_mock = mock.MagicMock(spec=[u'routes'])
+            routes_mock.routes = [router.Endpoint('/', views.View)]
+            with mock.patch.dict('sys.modules', {'test.routes': routes_mock}):
+                app_router = app.App.get_router(path, None)
+
+                self.assertIsInstance(app_router, router.Router)
+                self.assertEqual(len(app_router.endpoints), 1)
+                self.assertIsInstance(app_router.endpoints[0], router.Include)
+                self.assertEqual(app_router.endpoints[0].path, '/custom')
 
     def test_get_middlewares(self):
-        test_app = app.App(name='test', path=Path('test'))
+        path = Path('test')
 
-        middlewares = test_app._App__get_middlewares()
+        middlewares = app.App.get_middlewares(path)
         self.assertTrue(isinstance(middlewares, list))
         self.assertEqual(len(middlewares), 0)
 
-        test_app.exist = mock.Mock()
-        test_app.exist.return_value = True
+        app_path = {
+            'cls_get_import_path': lambda *_: 'test.middlewares',
+            'cls_exist': lambda *_: True
+        }
 
-        test_app.get_import_path = mock.Mock()
-        test_app.get_import_path.return_value = 'test.middlewares'
-
-        middlewares_mock = mock.MagicMock(spec=[])
-        with mock.patch.dict('sys.modules', {'test.middlewares': middlewares_mock}):
-            middlewares = test_app._App__get_middlewares()
-            self.assertTrue(isinstance(middlewares, list))
-            self.assertEqual(len(middlewares), 0)
+        with mock.patch.multiple(app.App, **app_path):
+            middlewares_mock = mock.MagicMock(spec=[])
+            with mock.patch.dict('sys.modules', {'test.middlewares': middlewares_mock}):
+                middlewares = app.App.get_middlewares(path)
+                self.assertTrue(isinstance(middlewares, list))
+                self.assertEqual(len(middlewares), 0)
 
         class AMiddleware(middleware.Middleware):
             pass
@@ -68,36 +82,39 @@ class AppTest(unittest.TestCase):
         class BMiddleware(middleware.Middleware):
             pass
 
-        middlewares_mock = mock.MagicMock(spec=[u'AMiddleware', u'NotMiddleware', u'NotMiddleware'])
-        middlewares_mock.AMiddleware = AMiddleware
-        middlewares_mock.NotMiddleware = NotMiddleware
-        middlewares_mock.BMiddleware = BMiddleware
-        with mock.patch.dict('sys.modules', {'test.middlewares': middlewares_mock}):
-            middlewares = test_app._App__get_middlewares()
-            self.assertEqual(
-                list(map(lambda item: type(item), [AMiddleware(), BMiddleware()])),
-                list(map(lambda item: type(item), middlewares))
-            )
+        with mock.patch.multiple(app.App, **app_path):
+            middlewares_mock = mock.MagicMock(spec=[u'AMiddleware', u'NotMiddleware', u'NotMiddleware'])
+            middlewares_mock.AMiddleware = AMiddleware
+            middlewares_mock.NotMiddleware = NotMiddleware
+            middlewares_mock.BMiddleware = BMiddleware
+            with mock.patch.dict('sys.modules', {'test.middlewares': middlewares_mock}):
+                middlewares = app.App.get_middlewares(path)
+                self.assertEqual(
+                    list(map(lambda item: type(item), [AMiddleware(), BMiddleware()])),
+                    list(map(lambda item: type(item), middlewares))
+                )
 
     def test_get_commands(self):
-        test_app = app.App(name='test', path=Path('test'))
+        path = Path('test')
 
-        commands = test_app._App__get_commands()
+        commands = app.App.get_commands(path)
         self.assertTrue(isinstance(commands, dict))
         self.assertEqual(len(commands), 0)
 
-        test_app.exist = mock.Mock()
-        test_app.exist.return_value = True
-        test_app.get_import_path = lambda to: f'test.{to}'
+        app_path = {
+            'cls_get_import_path': lambda _, to: f'test.{to}',
+            'cls_exist': lambda *_: True
+        }
 
-        commands_mock = mock.MagicMock(spec=[])
-        with mock.patch.dict('sys.modules', {'test.commands.empty': commands_mock}):
-            with mock.patch('os.listdir') as listdir_mock:
-                listdir_mock.return_value = ['empty.py']
+        with mock.patch.multiple(app.App, **app_path):
+            commands_mock = mock.MagicMock(spec=[])
+            with mock.patch.dict('sys.modules', {'test.commands.empty': commands_mock}):
+                with mock.patch('os.listdir') as listdir_mock:
+                    listdir_mock.return_value = ['empty.py']
 
-                commands = test_app._App__get_commands()
-                self.assertTrue(isinstance(commands, dict))
-                self.assertEqual(len(commands), 0)
+                    commands = app.App.get_commands(path)
+                    self.assertTrue(isinstance(commands, dict))
+                    self.assertEqual(len(commands), 0)
 
         class ACommand(command.Command):
             pass
@@ -123,13 +140,14 @@ class AppTest(unittest.TestCase):
             'test.commands.b_command': b_command_mock,
         }
 
-        with mock.patch.dict('sys.modules', mock_path):
-            with mock.patch('os.listdir') as listdir_mock:
-                listdir_mock.return_value = ['a_command.py', 'not_command.py', 'b_command.py']
+        with mock.patch.multiple(app.App, **app_path):
+            with mock.patch.dict('sys.modules', mock_path):
+                with mock.patch('os.listdir') as listdir_mock:
+                    listdir_mock.return_value = ['a_command.py', 'not_command.py', 'b_command.py']
 
-                commands = test_app._App__get_commands()
-                self.assertTrue(isinstance(commands, dict))
-                self.assertEqual({'a_command': ACommand, 'b_command': BCommand}, commands)
+                    commands = app.App.get_commands(path)
+                    self.assertTrue(isinstance(commands, dict))
+                    self.assertEqual({'a_command': ACommand, 'b_command': BCommand}, commands)
 
     def test_is_app(self):
         path_mock = mock.MagicMock()

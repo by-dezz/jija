@@ -1,13 +1,13 @@
+from types import ModuleType
+from typing import TypeVar, Type, Iterable
+
 import inspect
 
 
-def collect_subclasses(module, instance):
-    """
-    :type module: file
-    :type instance: type
-    :rtype: map
-    """
+T = TypeVar('T')
 
+
+def collect_subclasses(module: ModuleType, instance: Type[T]) -> Iterable[Type[T]]:
     members = []
     for name, obj in inspect.getmembers(module):
         if inspect.isclass(obj) and issubclass(obj, instance) and obj != instance:
