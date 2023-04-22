@@ -40,15 +40,26 @@ class App:
         self.__aiohttp_app = self.create_aiohttp_app()
 
     @classmethod
-    def construct(cls, name: str, path: Path, parent: Optional['App'] = None, extends: Optional['App'] = None):
+    def construct(
+            cls,
+            name: str,
+            path: Path,
+            parent: Optional['App'] = None,
+            extends: Optional['App'] = None
+    ) -> 'App':
+
         app_router = cls.get_router(path, parent)
         middlewares = cls.get_middlewares(path)
         commands = cls.get_commands(path)
 
         if extends:
-            app_router += extends.router
-            middlewares.extend(extends.middlewares)
-            commands.update(extends.commands)
+            app_router = extends.router + app_router
+            middlewares = extends.middlewares + middlewares
+
+            _commands = extends.commands.copy()
+            _commands.update(commands)
+
+            commands = _commands
 
         return cls(
             name,
