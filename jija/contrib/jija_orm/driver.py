@@ -13,7 +13,7 @@ class JijaOrmDriver(DatabaseDriver):
             password: str,
             host: str = 'localhost',
             user: str = 'postgres',
-            port: str = 5432
+            port: int = 5432
     ):
 
         super().__init__()
@@ -39,7 +39,7 @@ class JijaOrmDriver(DatabaseDriver):
         return self.__host
 
     @property
-    def port(self) -> str:
+    def port(self) -> int:
         return self.__port
 
     @property
