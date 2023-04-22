@@ -6,6 +6,7 @@ COPY setup.py /build/setup.py
 WORKDIR /build
 RUN python setup.py sdist
 
+
 FROM python:3.9-slim-buster
 
 COPY --from=0 /build/dist /dist
@@ -14,6 +15,19 @@ RUN pip install /dist/$(ls /dist)
 COPY tests /tests
 WORKDIR /tests
 RUN python main.py
+
+
+FROM python:3.9-slim-buster
+
+COPY --from=0 /build/dist /dist
+RUN pip install /dist/$(ls /dist)
+
+COPY examples /examples
+COPY build/check_examples.sh /check_examples.sh
+
+RUN apt update && apt install -y curl
+RUN /check_examples.sh
+
 
 FROM python:3.9-slim-buster
 

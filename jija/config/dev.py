@@ -2,7 +2,7 @@ from jija.config import base
 
 
 class DevConfig(base.Config):
-    RELOADER_EXCLUDED_DIRS: set
+    RELOADER_EXCLUDED_DIRS: set = None
 
     def __init__(self, *, reloader_excluded=None):
         self.__class__.__PREF = {

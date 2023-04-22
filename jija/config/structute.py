@@ -1,11 +1,12 @@
-from jija.config import base, fields
+from jija.config import base
+from jija.serializers import fields
 
 from pathlib import Path as Path
 import sys
 
 
 class StructureConfig(base.Config):
-    PROJECT_PATH = None
+    PROJECT_PATH: Path = fields.InstanceField(instance_pattern=Path)
     CORE_PATH = None
     APPS_PATH = None
     PYTHON_PATH = fields.CharField(default=sys.executable)

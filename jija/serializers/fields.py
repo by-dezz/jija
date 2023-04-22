@@ -116,3 +116,20 @@ class SelectField(Field):
     def __init__(self, *, options, **kwargs):
         super().__init__(**kwargs)
         self.options = options
+
+
+class ClassField(Field):
+    validators = SubclassValidator,
+
+    def __init__(self, *, class_pattern, **kwargs):
+        self.class_pattern = class_pattern
+        super().__init__(**kwargs)
+
+
+class InstanceField(Field):
+    validators = (InstanceValidator,)
+
+    def __init__(self, *, instance_pattern, **kwargs):
+        self.instance_pattern = instance_pattern
+        super().__init__(**kwargs)
+

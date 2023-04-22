@@ -32,6 +32,12 @@ class Router:
     def __str__(self):
         return self.__repr__()
 
+    def __add__(self, other):
+        if not isinstance(other, Router):
+            raise TypeError(f'Can not add "Router" to {type(other)}')
+
+        return Router(self.endpoints + other.endpoints)
+
 
 class AbsEndpoint:
     def generate_routes(self, prefix=''):
@@ -39,8 +45,8 @@ class AbsEndpoint:
 
 
 class Endpoint(AbsEndpoint):
-    def __init__(self, path, view: typing.Type[views.ViewBase]):
-        if not issubclass(view, views.ViewBase):
+    def __init__(self, path, view: typing.Type[views._ViewBase]):
+        if not issubclass(view, views._ViewBase):
             raise AttributeError(f'view must be a subclass of "jija.views.ViewBase", got {view}')
 
         self.__path = path

@@ -44,9 +44,6 @@ class Serializer:
 
         return self.__valid
 
-    async def out_validate(self):
-        pass
-
     @property
     def valid(self):
         return self.__valid

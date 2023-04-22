@@ -1,6 +1,6 @@
 import inspect
 import json
-from typing import Union
+from typing import Union, Type
 
 import aiohttp.http_websocket
 from aiohttp import web
@@ -8,7 +8,7 @@ from aiohttp import web
 from jija import response, serializers, exceptions
 
 
-class ViewBase:
+class _ViewBase:
     def __init__(self, request: web.Request, path_params: web.UrlMappingMatchInfo):
         self.__request = request
         self.__path_params = path_params
@@ -37,12 +37,8 @@ class ViewBase:
         raise NotImplementedError()
 
 
-class View(ViewBase):
+class View(_ViewBase):
     methods = ('get', 'post', 'patch', 'put', 'delete')
-
-    serializers_in = None
-
-    # serializers_out = None TODO
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,22 +64,16 @@ class View(ViewBase):
         return view_methods
 
     async def dispatch(self):
-        try:
-            await self.load_data()
-            handler = getattr(self, self.method)
-            return await handler() if inspect.iscoroutinefunction(handler) else handler()
-
-        except serializers.SerializeError as error:
-            return response.JsonResponse(error.serializer.errors, status=400)
+        await self.load_data()
+        handler = getattr(self, self.method)
+        return await self.run_handler(handler)
 
     async def load_data(self):
-        data = {
+        self.__data = {
             **await self.parse_body(),
             **self.parse_path(),
             **self.parse_query()
         }
-
-        self.__data = await self.in_serialize(data)
 
     async def parse_body(self) -> dict:
         if self.method != 'get':
@@ -109,59 +99,74 @@ class View(ViewBase):
 
         return data
 
-    async def in_serialize(self, data: dict) -> dict:
-        serializer_class = await self.get_in_serializer(self.method)
-        if serializer_class:
-            serializer = serializer_class(data)
+    async def run_handler(self, handler):
+        if inspect.iscoroutinefunction(handler):
+            return await handler()
+        else:
+            return handler()
+
+
+class _SerializedViewMeta(type):
+    def __new__(mcs, name, bases, attrs):
+        cls = super().__new__(mcs, name, bases, attrs)
+
+        for method in cls.get_methods():
+            handler = getattr(cls, method)
+            cls.__annotate_serializers(handler)
+
+        return cls
+
+    @staticmethod
+    def __annotate_serializers(handler):
+        handler_serializers = {}
+        for name, arg in inspect.signature(handler).parameters.items():
+            if name == 'self':
+                continue
+
+            if issubclass(arg.annotation, serializers.Serializer):
+                handler_serializers[name] = arg.annotation
+
+        handler.__serializers__ = handler_serializers
+
+
+class SerializedView(View, metaclass=_SerializedViewMeta):
+    async def dispatch(self):
+        try:
+            return await super().dispatch()
+
+        except serializers.SerializeError as error:
+            return response.JsonResponse(error.serializer.errors, status=400)
+
+    async def run_handler(self, handler):
+        data = await self.in_serialize(handler.__serializers__)
+        if inspect.iscoroutinefunction(handler):
+            return await handler(**data)
+        else:
+            return handler(**data)
+
+    async def in_serialize(
+            self,
+            handler_serializers: dict[str, Type[serializers.Serializer]]
+    ) -> dict[str, serializers.Serializer]:
+
+        data = {}
+        for name, serializer_class in handler_serializers.items():
+            serializer = serializer_class(self.data)
             await serializer.in_serialize()
 
             if not serializer.valid:
                 raise serializers.SerializeError(serializer)
 
-            return serializer.data
+            data[name] = serializer
 
         return data
-
-    async def out_serialize(self, response) -> web.Response:
-        # if isinstance(response, SerializeResponse): TODO
-        #
-        #     serializer_class = await self.get_out_serializer(self.method)
-        #     if not serializer_class:
-        #         raise ValueError('Got SerializerResponse, but out serializer not set')
-        #
-        #     return await response.serialize(serializer_class)
-
-        return response
-
-    @classmethod
-    async def get_in_serializer(cls, method):
-        return cls.serializers_in and cls.serializers_in[method]
-
-    # @classmethod TODO
-    # async def get_out_serializer(cls, method):
-    #     return cls.serializers_out and cls.serializers_out[method]
-
-
-class SerializersSet:
-    def __init__(self, get=None, post=None, put=None, path=None, delete=None, **kwargs):
-        self.__serializers = {
-            'get': get,
-            'post': post,
-            'put': put,
-            'path': path,
-            'delete': delete,
-            **kwargs
-        }
-
-    def __getitem__(self, item):
-        return self.__serializers[item]
 
 
 class DocMixin:
     pass
 
 
-class WSView(ViewBase):
+class WSView(_ViewBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__ws = None

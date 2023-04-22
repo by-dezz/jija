@@ -43,7 +43,7 @@ class Reloader:
         for file in files:
             next_path = f'{path}/{file}'
 
-            if next_path in config.DevConfig.RELOADER_EXCLUDED_DIRS:
+            if config.DevConfig.RELOADER_EXCLUDED_DIRS and next_path in config.DevConfig.RELOADER_EXCLUDED_DIRS:
                 continue
 
             if os.path.isdir(next_path):

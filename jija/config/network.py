@@ -1,4 +1,5 @@
-from jija.config import base, fields
+from jija.config import base
+from jija.serializers import fields
 
 
 class NetworkConfig(base.Config):
