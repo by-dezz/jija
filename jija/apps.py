@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Type, Optional
+
+from aiohttp import web
+
 if TYPE_CHECKING:
     from jija.config.base import Config
 
@@ -17,16 +20,7 @@ from jija import config
 from jija import app
 
 
-class AppGetter(type):
-    def __getattr__(self, item: str) -> app.App:
-        jija_app = Apps.apps.get(item)
-        if jija_app:
-            return jija_app
-
-        raise AttributeError(item)
-
-
-class Apps(metaclass=AppGetter):
+class Apps:
     apps: dict[str, app.App] = {}
 
     __REQUIRED_CONFIGS = {
@@ -35,7 +29,10 @@ class Apps(metaclass=AppGetter):
         config.NetworkConfig
     }
 
-    __INITED_CONFIGS: list[Config] = []
+    __INITED_CONFIGS: list[Type[Config]] = []
+
+    __SETUP_TASKS = []
+    __CORE_SETUP_TASKS = []
     __PREFLIGHT_TASKS = []
 
     @classmethod
@@ -46,7 +43,7 @@ class Apps(metaclass=AppGetter):
         cls.__register_apps()
 
     @classmethod
-    def config_init_callback(cls, config_class):
+    def config_init_callback(cls, config_class: Type[Config]):
         cls.__INITED_CONFIGS.append(config_class)
 
     @classmethod
@@ -61,7 +58,11 @@ class Apps(metaclass=AppGetter):
     async def __freeze_configs(cls):
         for config_class in cls.__INITED_CONFIGS:
             await config_class.freeze()
+
             cls.__PREFLIGHT_TASKS.append(config_class.preflight)
+
+            cls.__SETUP_TASKS.append(config_class.setup)
+            cls.__CORE_SETUP_TASKS.append(config_class.core_setup)
 
     @classmethod
     def __create_base_app(cls) -> app.App:
@@ -79,9 +80,6 @@ class Apps(metaclass=AppGetter):
             )
         else:
             core_app = base_app
-
-        for config_unit in cls.__INITED_CONFIGS:
-            core_app.aiohttp_app_update(config_unit.base_app_update(core_app.aiohttp_app))
 
         return core_app
 
@@ -137,6 +135,15 @@ class Apps(metaclass=AppGetter):
         command_class = cls.get_command(module, command)
         command_obj = command_class()
         command_obj.run()
+
+    @classmethod
+    def process_setup(cls, jija_app: app.App, aiohttp_app: web.Application, core: bool):
+        if core:
+            for task in cls.__CORE_SETUP_TASKS:
+                task(jija_app, aiohttp_app)
+
+        for task in cls.__SETUP_TASKS:
+            task(jija_app, aiohttp_app)
 
     @classmethod
     async def __preflight(cls):

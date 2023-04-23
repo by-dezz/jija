@@ -1,4 +1,5 @@
 from aiohttp import web
+from jija import app
 
 
 class Config:
@@ -32,12 +33,12 @@ class Config:
             setattr(cls, name, value)
 
     @classmethod
-    def base_app_update(cls, aiohttp_app: web.Application) -> web.Application:
-        return aiohttp_app
+    def core_setup(cls, jija_app, aiohttp_app: web.Application):
+        pass
 
     @classmethod
-    def each_app_update(cls, aiohttp_app: web.Application) -> web.Application:
-        return aiohttp_app
+    def setup(cls, jija_app: app.App, aiohttp_app: web.Application):
+        pass
 
     @classmethod
     async def preflight(cls):

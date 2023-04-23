@@ -5,6 +5,7 @@ from aiohttp import web
 
 from jija.contrib.swagger import views
 from jija.drivers import DocsDriver
+from jija import app
 
 
 class SwaggerDriver(DocsDriver):
@@ -17,7 +18,7 @@ class SwaggerDriver(DocsDriver):
     def url(self) -> str:
         return self.__url
 
-    def setup(self, aiohttp_app: web.Application) -> web.Application:
+    def setup(self, jija_app: app.App, aiohttp_app: web.Application) -> web.Application:
         aiohttp_app.router.add_route('GET', f'{self.url}/', aiohttp_swagger._swagger_home)
         aiohttp_app.router.add_route(
             'GET', f"{self.url}/swagger.json", views.swagger_view)

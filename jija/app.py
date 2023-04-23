@@ -163,6 +163,9 @@ class App:
     def create_aiohttp_app(self) -> web.Application:
         aiohttp_app = web.Application()
 
+        from jija import apps
+        apps.Apps.process_setup(self, aiohttp_app, not self.parent)
+
         aiohttp_app.middlewares.extend(self.middlewares)
 
         aiohttp_app.add_routes(self.router.routes)
