@@ -20,6 +20,13 @@ nav:
     - Reference:
         - Config: reference/config.md
         - Router: reference/router.md
+        - Drivers: reference/drivers.md
+
+    - Drivers:
+        - Contribute: drivers/contribute.md
+        - Database: drivers/database.md
+        - Docs: drivers/docs.md
+
 
 theme:
     name: material
