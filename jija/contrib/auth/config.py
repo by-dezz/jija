@@ -14,4 +14,6 @@ class AuthConfig(base.Config):
     @classmethod
     def base_app_update(cls, aiohttp_app):
         aiohttp_session.setup(aiohttp_app, EncryptedCookieStorage(cls.SECRET_KEY))
+        # TODO fix this shit
+        aiohttp_app.middlewares.insert(0, aiohttp_app.middlewares.pop(-1))
         return aiohttp_app

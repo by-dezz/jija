@@ -33,10 +33,14 @@ class Serializer:
                 self.errors[name] = exception.error
                 self.data[name] = exception.value
 
-        if inspect.iscoroutinefunction(self.clean):
-            await self.clean()
-        else:
-            self.clean()
+        try:
+            if inspect.iscoroutinefunction(self.clean):
+                # noinspection PyUnresolvedReferences
+                await self.clean()
+            else:
+                self.clean()
+        except ValidationError as exception:
+            self.errors[exception.error] = exception.value
 
         self.__valid = len(self.errors) == 0
         if not self.__valid:

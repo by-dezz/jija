@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='jija',
-    version='0.3.1',
+    version='0.3.2',
     description='Async framework for web development with graceful collector',
     url='https://gitlab.com/by_dezz/jija/',
 
