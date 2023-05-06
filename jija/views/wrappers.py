@@ -73,18 +73,20 @@ class DataLoadWrapper(Wrapper):
 
 class AuthCheckWrapper(Wrapper):
     async def wrapper(self: Union['jija.views.View', 'AuthCheckWrapper'], handler, **kwargs):
-        auth_rule = self.get_auth_rule_class()
-        print(3, self.user)
-        print(self.request.app.middlewares)
-        if auth_rule is not None and not auth_rule().check(self.request):
+        auth_rule = self.get_auth_rule()
+        if auth_rule is not None and not auth_rule.check(self.request):
             return jija.response.JsonResponse({'error': 'Unauthorized'}, status=401)
 
         return await handler(self, **kwargs)
 
-    def get_auth_rule_class(
+    def get_auth_rule(
             self: Union['jija.views.View', 'AuthCheckWrapper']
-    ) -> Optional[Type['jija.drivers.auth.rules.AuthRule']]:
-        return self.DEFAULT_AUTH_RULE or self.app.DEFAULT_AUTH_RULE
+    ) -> Optional['jija.drivers.auth.rules.AuthRule']:
+        return (
+                self.DEFAULT_AUTH_RULE or
+                self.app.DEFAULT_AUTH_RULE or
+                jija.config.DriversConfig.AUTH.default_auth_rule
+        )()
 
 
     @property

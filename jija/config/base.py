@@ -1,5 +1,4 @@
-from aiohttp import web
-from jija import app
+import jija.app
 
 
 class Config:
@@ -33,11 +32,11 @@ class Config:
             setattr(cls, name, value)
 
     @classmethod
-    def core_setup(cls, jija_app, aiohttp_app: web.Application):
+    def core_setup(cls, app: jija.app.App):
         pass
 
     @classmethod
-    def setup(cls, jija_app: app.App, aiohttp_app: web.Application):
+    def setup(cls, app: jija.app.App):
         pass
 
     @classmethod
