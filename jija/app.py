@@ -10,12 +10,14 @@ from aiohttp import web
 from jija.collector import collect_subclasses
 from jija.middleware import Middleware
 from jija.command import Command
+from jija import auth
 from jija import config
 from jija import router
 
 
 class App:
     CUSTOM_URL_PATH: Optional[str] = None
+    DEFAULT_AUTH_RULE: Optional[auth.rules.AuthRule] = None
 
     def __init__(
             self,
@@ -37,7 +39,7 @@ class App:
         self.__commands = commands
         self.__childes = []
 
-        self.__aiohttp_app = self.create_aiohttp_app()
+        self.__aiohttp_app = None
 
     @classmethod
     def construct(
@@ -160,18 +162,25 @@ class App:
 
         return True
 
-    def create_aiohttp_app(self) -> web.Application:
-        aiohttp_app = web.Application()
+    def setup(self, tasks, core_tasks=None):
+        self.__aiohttp_app = web.Application()
 
-        from jija import apps
-        apps.Apps.process_setup(self, aiohttp_app, not self.parent)
+        if core_tasks:
+            for task in core_tasks:
+                task(self)
 
-        aiohttp_app.middlewares.extend(self.middlewares)
+        for task in tasks:
+            task(self)
 
-        aiohttp_app.add_routes(self.router.routes)
-        aiohttp_app['JIJA_ROUTER'] = self.router
+        self.setup_aiohttp_app()
 
-        return aiohttp_app
+        for child in self.childes:
+            child.setup(tasks)
+
+    def setup_aiohttp_app(self):
+        self.aiohttp_app.middlewares.extend(self.middlewares)
+        self.aiohttp_app.add_routes(self.router.construct_routes(self))
+        self.aiohttp_app['JIJA_ROUTER'] = self.router
 
     def add_child(self, child: "App"):
         self.__childes.append(child)
@@ -217,6 +226,3 @@ class App:
             parent_prefix = ''
 
         return f'{parent_prefix}{self_prefix}'
-
-    def aiohttp_app_update(self, new_aiohttp_app: web.Application):
-        self.__aiohttp_app = new_aiohttp_app
