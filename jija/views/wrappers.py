@@ -102,6 +102,7 @@ class SerializerWrapper(Wrapper):
     @classmethod
     def construct(cls, handler):
         serializers = cls.get_serializers(handler)
+        handler.__serializers__ = serializers
         async def wrapper(view):
             cls.__init__(view)
             cls.serializers = serializers
