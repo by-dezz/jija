@@ -14,7 +14,7 @@ class DocsProcessor:
 
     async def create_json(self):
         from jija import apps
-        paths = await self.__parse_router('', apps.Apps.core)
+        paths = await self.__parse_router('', apps.Apps.apps['core'])
 
         return {
             'openapi': '3.0.1',

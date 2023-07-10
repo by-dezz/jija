@@ -18,6 +18,10 @@ class Serializer:
     def get_fields(cls) -> Dict[str, fields.Field]:
         serializer_fields = {}
 
+        for parent in cls.mro():
+            if parent is not cls and issubclass(parent, Serializer):
+                serializer_fields.update(parent.get_fields())
+
         for name, obj in cls.__dict__.items():
             if issubclass(type(obj), fields.Field):
                 serializer_fields[name] = obj

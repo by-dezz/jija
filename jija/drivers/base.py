@@ -1,9 +1,12 @@
-from aiohttp import web
+import jija
 
 
 class Driver:
-    def setup(self, aiohttp_app: web.Application):
-        return aiohttp_app
+    def core_setup(self, app: jija.app.App):
+        pass
+
+    def setup(self, app: jija.app.App):
+        pass
 
     async def preflight(self):
         pass

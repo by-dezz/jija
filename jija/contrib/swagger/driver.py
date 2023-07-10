@@ -1,6 +1,7 @@
 import os
 
 import aiohttp_swagger
+import jija
 from aiohttp import web
 
 from jija.contrib.swagger import views
@@ -17,18 +18,17 @@ class SwaggerDriver(DocsDriver):
     def url(self) -> str:
         return self.__url
 
-    def setup(self, aiohttp_app: web.Application) -> web.Application:
-        aiohttp_app.router.add_route('GET', f'{self.url}/', aiohttp_swagger._swagger_home)
-        aiohttp_app.router.add_route(
+    def core_setup(self, app: jija.app.App):
+        app.aiohttp_app.router.add_route('GET', f'{self.url}/', aiohttp_swagger._swagger_home)
+        app.aiohttp_app.router.add_route(
             'GET', f"{self.url}/swagger.json", views.swagger_view)
 
         static_route = f'{self.url}/swagger_static'
 
-        aiohttp_app.router.add_static(static_route, self.STATIC_PATH)
+        app.aiohttp_app.router.add_static(static_route, self.STATIC_PATH)
 
-        aiohttp_app["SWAGGER_DEF_CONTENT"] = 'asdasd'
-        self.__set_template(aiohttp_app)
-        return aiohttp_app
+        app.aiohttp_app["SWAGGER_DEF_CONTENT"] = 'asdasd'
+        self.__set_template(app.aiohttp_app)
 
     def __set_template(self, aiohttp_app: web.Application):
         static_route = f'{self.url}/swagger_static'

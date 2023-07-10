@@ -11,3 +11,5 @@ from . import reloader
 from . import response
 from . import router
 from . import views
+
+__version__ = '0.4'
